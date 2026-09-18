@@ -1,5 +1,4 @@
 import { useState, type KeyboardEvent } from 'react';
-import { Icon } from './Icon';
 
 export function PrivacyExplainer() {
   const [view, setView] = useState<'public' | 'private'>('public');
@@ -45,7 +44,7 @@ export function PrivacyExplainer() {
           target="_blank"
           rel="noreferrer"
         >
-          Explore Midnight <Icon name="external" />
+          Explore Midnight
         </a>
       </div>
       <div className="privacy-browser">
@@ -66,7 +65,6 @@ export function PrivacyExplainer() {
               onClick={() => setView(tab)}
               onKeyDown={onTabKey}
             >
-              <Icon name={tab === 'public' ? 'eye' : 'lock'} />
               {tab === 'public' ? 'What the world sees' : 'What stays private'}
             </button>
           ))}
@@ -86,7 +84,6 @@ export function PrivacyExplainer() {
                 ? 'PUBLIC LEDGER / VISIBLE ON-CHAIN'
                 : 'PRIVATE WITNESS / NEVER RENDERED'}
             </span>
-            <Icon name={view === 'public' ? 'cube' : 'lock'} />
           </div>
           {view === 'public' ? (
             <>
@@ -96,18 +93,13 @@ export function PrivacyExplainer() {
               </div>
               <div className="inspector-line">
                 <span>Proof accepted</span>
-                <strong className="accepted">
-                  true <Icon name="check" />
-                </strong>
+                <strong className="accepted">true</strong>
               </div>
               <div className="inspector-line">
                 <span>Transaction &amp; block</span>
                 <strong>Publicly verifiable</strong>
               </div>
-              <p>
-                <Icon name="eye" /> The outcome is public. The reason stays
-                yours.
-              </p>
+              <p>The outcome is public. The reason stays yours.</p>
             </>
           ) : (
             <>
@@ -125,10 +117,7 @@ export function PrivacyExplainer() {
                 <span>On-chain disclosure</span>
                 <strong>Validity only</strong>
               </div>
-              <p>
-                <Icon name="lock" /> This illustration never reads your private
-                input.
-              </p>
+              <p>This illustration never reads your private input.</p>
             </>
           )}
         </div>

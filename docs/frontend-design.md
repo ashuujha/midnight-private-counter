@@ -27,12 +27,14 @@ Constraints: One sculptural object, no text, no letters, no logos, no watermark,
 
 ## Type
 
-Space Grotesk (display), DM Sans (body), and DM Mono (metadata) are served from
+Space Grotesk (display), IBM Plex Sans (body), and DM Mono (metadata) are served from
 `public/fonts/`. They are sourced from Google Fonts. Their SIL Open Font License
 files are included alongside the fonts.
 
 ## Motion and interaction
 
+- Text-led actions use fine borders and subtle color feedback. Decorative icon
+  badges are removed; icons remain for copy, refresh, motion, and transaction status.
 - The hero follows desktop pointer movement with a subtle perspective tilt.
 - The sculpture floats slowly; orbital nodes and proof paths carry small light pulses.
 - Sections reveal on entry, and wallet/proof states have visible feedback.

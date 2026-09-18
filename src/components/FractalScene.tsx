@@ -1,5 +1,4 @@
 import { useRef, type PointerEvent } from 'react';
-import { Icon } from './Icon';
 
 export function FractalScene({ motion }: { motion: boolean }) {
   const stage = useRef<HTMLDivElement>(null);
@@ -103,9 +102,6 @@ export function FractalScene({ motion }: { motion: boolean }) {
         </svg>
       </div>
       <div className="floating-label label-private">
-        <span className="label-symbol">
-          <Icon name="lock" />
-        </span>
         <div>
           <span>PRIVATE WITNESS</span>
           <strong>Hidden from the chain.</strong>
@@ -118,7 +114,6 @@ export function FractalScene({ motion }: { motion: boolean }) {
           <span>PUBLIC OUTCOME</span>
           <strong>One verifiable step.</strong>
         </div>
-        <Icon name="check" />
       </div>
       <div className="scene-coordinate coordinate-bottom">
         <span>z ↦ z² + c</span>

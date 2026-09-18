@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'DM Sans';
-  src: url('/fonts/dm-sans-latin.woff2') format('woff2');
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/ibm-plex-sans-latin.woff2') format('woff2');
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
@@ -21,7 +21,7 @@
 }
 
 :root {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--body);
   color: #ecefe5;
   background: #0c1211;
   font-synthesis: none;
@@ -37,6 +37,7 @@
   --mint: #a6c8b0;
   --lavender: #c8bce6;
   --mono: 'DM Mono', monospace;
+  --body: 'IBM Plex Sans', sans-serif;
   --display: 'Space Grotesk', sans-serif;
 }
 
@@ -160,23 +161,14 @@ svg {
 .lab-footnote a:hover {
   color: var(--lime);
 }
-.main-nav svg {
-  width: 14px;
-  height: 14px;
-}
 .header-cta {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   padding: 13px 18px;
   border: 1px solid #3e4b3f;
-  border-radius: 7px;
+  border-radius: 2px;
   font-size: 12px;
-}
-.header-cta svg {
-  width: 16px;
-  height: 16px;
-  margin-left: 9px;
 }
 .header-cta:hover {
   background: #1e2b22;
@@ -258,63 +250,68 @@ svg {
   min-height: 53px;
   padding: 15px 20px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: 2px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.015em;
   line-height: 1.4;
 }
 .button-primary {
-  color: #202a1c;
-  background: var(--lime);
+  color: var(--lime);
+  background: #d7edb808;
+  border-color: #7c9062;
 }
 .button-primary:hover:not(:disabled) {
-  background: #e6f6d0;
-  transform: translateY(-2px);
+  background: #d7edb815;
+  border-color: var(--lime);
 }
 .button-secondary {
   color: #bdcbbf;
-  background: #1c2722;
+  background: transparent;
   border-color: #354239;
 }
 .button-secondary:hover:not(:disabled) {
   border-color: var(--mint);
-  background: #283a2c;
+  background: #a6c8b00a;
 }
 .button-lavender {
-  color: #211c2b;
-  background: var(--lavender);
+  color: var(--lavender);
+  background: #c8bce608;
+  border-color: #88769f;
 }
 .button-lavender:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: #ddd1f7;
+  background: #c8bce615;
+  border-color: var(--lavender);
 }
 .button:disabled {
   color: #8a8792;
-  background: #28272e;
+  background: transparent;
   border-color: #3b373f;
-}
-.button svg {
-  width: 17px;
-  height: 17px;
 }
 .hero-cta {
   width: auto;
-  gap: 24px;
-  padding-inline: 23px;
+  padding: 12px 0;
   min-height: 54px;
+  border: 0;
+  border-bottom: 1px solid #7c9062;
+  border-radius: 0;
+  background: transparent;
+}
+.hero-cta:hover:not(:disabled) {
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--lime);
 }
 .hero-secondary {
   display: inline-flex;
   align-items: center;
   gap: 14px;
   font-size: 12px;
+  min-height: 44px;
+  color: var(--muted);
 }
-.hero-secondary span {
-  color: var(--mint);
-  transition: transform 0.3s;
-}
-.hero-secondary:hover span {
-  transform: translateY(4px);
+.hero-secondary:hover {
+  color: var(--ink);
 }
 .hero-note {
   display: flex;
@@ -323,10 +320,6 @@ svg {
   margin-top: 24px;
   color: var(--subtle);
   font-size: 10px;
-}
-.hero-note svg {
-  width: 13px;
-  height: 13px;
 }
 .hero-bottom {
   position: absolute;
@@ -535,22 +528,6 @@ svg {
   bottom: 19%;
   animation-delay: -4s;
 }
-.label-public > svg {
-  width: 14px;
-  height: 14px;
-  color: var(--lime);
-}
-.label-symbol {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 34px;
-  color: var(--lavender);
-}
-.label-symbol svg {
-  width: 21px;
-  height: 21px;
-}
 .increment-symbol {
   font-family: var(--display);
   font-size: 26px;
@@ -568,7 +545,7 @@ svg {
 }
 .principles-strip > div {
   display: grid;
-  grid-template-columns: 28px auto;
+  grid-template-columns: 1fr;
   gap: 6px 14px;
   padding: 0 40px;
   border-right: 1px solid var(--line);
@@ -578,13 +555,6 @@ svg {
 }
 .principles-strip > div:last-child {
   border: 0;
-}
-.principles-strip svg {
-  grid-row: span 2;
-  color: var(--mint);
-  margin-top: 4px;
-  width: 23px;
-  height: 23px;
 }
 .principles-strip span {
   font-size: 13px;
@@ -668,9 +638,7 @@ svg {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 9px;
-  border: 1px solid #3c453c;
-  border-radius: 5px;
+  padding: 6px 0;
   color: var(--muted);
   font-family: var(--mono);
   font-size: 8px;
@@ -682,7 +650,6 @@ svg {
 }
 .status-pill.success {
   color: var(--lime);
-  border-color: #516747;
 }
 .status-pill.success .status-dot {
   background: var(--lime);
@@ -695,10 +662,6 @@ svg {
   font-size: 8px;
   color: var(--lavender);
   letter-spacing: 0.03em;
-}
-.privacy-chip svg {
-  width: 12px;
-  height: 12px;
 }
 .panel h3 {
   margin: 22px 0 9px;
@@ -751,16 +714,11 @@ svg {
   place-items: center;
   height: 65px;
   width: 65px;
-  border-radius: 16px;
   color: var(--lime);
-  background: linear-gradient(135deg, #35433190, #26342380);
-  border: 1px solid #7b926252;
-  transform: rotate(-7deg);
+  font-size: 26px;
+  font-weight: 450;
+  letter-spacing: -0.04em;
   animation: wallet-levitate 8s ease-in-out infinite;
-}
-.wallet-symbol svg {
-  width: 28px;
-  height: 28px;
 }
 .orbit-dot {
   position: absolute;
@@ -793,12 +751,6 @@ svg {
 .panel-action {
   margin-top: auto;
   padding-top: 24px;
-}
-.panel-action .button > svg:last-child:not(:first-child) {
-  margin-left: auto;
-}
-.panel-action .button > svg:first-child {
-  margin-right: auto;
 }
 .button-hint {
   display: flex;
@@ -992,9 +944,11 @@ svg {
   background: #a992c209;
   color: var(--lavender);
 }
-.private-symbol svg {
-  width: 23px;
-  height: 23px;
+.private-symbol {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 3px;
+  padding-left: 3px;
 }
 .proof-symbol {
   position: relative;
@@ -1073,14 +1027,7 @@ svg {
   align-items: center;
   gap: 11px;
   padding: 14px 15px;
-  border: 1px solid #76826930;
-  border-radius: 8px;
-  background: #839b7609;
-}
-.privacy-callout > svg {
-  color: var(--mint);
-  width: 18px;
-  height: 18px;
+  border-left: 1px solid #76826980;
 }
 .privacy-callout > div {
   display: grid;
@@ -1250,10 +1197,6 @@ svg {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.help-message svg {
-  width: 12px;
-  height: 12px;
-}
 .configuration-banner {
   margin: 0 0 18px;
 }
@@ -1285,10 +1228,6 @@ svg {
   align-items: center;
   gap: 5px;
   color: var(--muted);
-}
-.lab-footnote svg {
-  width: 12px;
-  height: 12px;
 }
 
 .privacy-section {
@@ -1323,10 +1262,6 @@ svg {
   gap: 24px;
   font-size: 11px;
   margin-top: 15px;
-}
-.text-link svg {
-  width: 15px;
-  height: 15px;
 }
 .privacy-browser {
   border: 1px solid #3b413c;
@@ -1364,10 +1299,6 @@ svg {
 .privacy-tabs button:focus-visible {
   outline-offset: -5px;
 }
-.privacy-tabs svg {
-  width: 14px;
-  height: 14px;
-}
 .privacy-inspector {
   padding: 24px;
   animation: arrive 0.35s ease both;
@@ -1381,12 +1312,6 @@ svg {
   font-size: 8px;
   letter-spacing: 0.04em;
   margin-bottom: 18px;
-}
-.inspector-title > svg {
-  margin-left: auto;
-  width: 16px;
-  height: 16px;
-  color: var(--mint);
 }
 .inspector-line {
   display: flex;
@@ -1412,10 +1337,6 @@ svg {
   gap: 8px;
   color: var(--lime);
 }
-.accepted svg {
-  width: 13px;
-  height: 13px;
-}
 .inspector-line .hidden-witness {
   color: var(--lavender);
   letter-spacing: 5px;
@@ -1428,10 +1349,6 @@ svg {
   font-size: 10px;
   line-height: 1.5;
   margin: 22px 0 0;
-}
-.privacy-inspector > p > svg {
-  width: 13px;
-  height: 13px;
 }
 .closing-note {
   position: relative;
@@ -1497,10 +1414,6 @@ svg {
   align-items: center;
   gap: 5px;
 }
-.site-footer svg {
-  width: 12px;
-  height: 12px;
-}
 .site-footer .footer-brand {
   color: var(--ink);
   font-family: var(--display);
@@ -1510,7 +1423,7 @@ svg {
 }
 .footer-brand > span {
   color: var(--subtle);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--body);
   font-size: 9px;
   letter-spacing: 0;
 }
@@ -1565,10 +1478,10 @@ svg {
 @keyframes wallet-levitate {
   0%,
   100% {
-    transform: translateY(-3px) rotate(-7deg);
+    transform: translateY(-3px);
   }
   50% {
-    transform: translateY(3px) rotate(3deg);
+    transform: translateY(3px);
   }
 }
 @keyframes label-float {
@@ -1672,7 +1585,7 @@ svg {
   }
   .hero-cta {
     gap: 16px;
-    padding-inline: 19px;
+    padding-inline: 0;
     font-size: 12px;
   }
   .hero-secondary {
@@ -1743,9 +1656,6 @@ svg {
     gap: 8px;
     font-size: 11px;
   }
-  .header-cta svg {
-    margin-left: 0;
-  }
   .hero {
     min-height: 590px;
   }
@@ -1766,7 +1676,7 @@ svg {
     gap: 16px;
   }
   .hero-cta {
-    padding-inline: 15px;
+    padding-inline: 0;
     gap: 12px;
   }
   .hero-secondary {
@@ -1778,10 +1688,6 @@ svg {
   }
   .floating-label div span {
     font-size: 6px;
-  }
-  .label-symbol {
-    width: 23px;
-    height: 28px;
   }
   .label-private {
     left: 5%;
@@ -1805,10 +1711,6 @@ svg {
   }
   .principles-strip .principle-detail {
     font-size: 9px;
-  }
-  .principles-strip svg {
-    width: 20px;
-    height: 20px;
   }
   .lab-section {
     padding-top: 74px;
@@ -1981,7 +1883,7 @@ svg {
   .hero-cta {
     min-height: 49px;
     font-size: 12px;
-    padding-inline: 20px;
+    padding-inline: 0;
   }
   .hero-secondary {
     font-size: 11px;
@@ -2063,15 +1965,9 @@ svg {
   .principles-strip > div:first-child {
     padding: 0;
     border: 0;
-    grid-template-columns: 22px 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     align-items: center;
     gap: 8px;
-  }
-  .principles-strip svg {
-    grid-row: auto;
-    width: 17px;
-    height: 17px;
-    margin: 0;
   }
   .principles-strip span {
     font-size: 10px;
@@ -2121,7 +2017,7 @@ svg {
   }
   .status-pill {
     font-size: 8px;
-    padding: 6px 8px;
+    padding: 6px 0;
   }
   .wallet-empty {
     min-height: 230px;
@@ -2246,7 +2142,7 @@ svg {
     gap: 20px;
   }
   .hero-cta {
-    padding-inline: 14px;
+    padding-inline: 0;
     gap: 13px;
     font-size: 11px;
   }
@@ -2305,8 +2201,4 @@ svg {
   .fractal-stage {
     transform: none !important;
   }
-}
-
-.panel-action .button-secondary > svg:first-child {
-  margin-right: 0;
 }

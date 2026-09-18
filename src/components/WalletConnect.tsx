@@ -123,7 +123,7 @@ export function WalletConnect() {
                   ? 'Register tNIGHT using Generate tDUST in Lace.'
                   : dustBalance?.balance === 0n
                     ? 'Waiting for DUST to accrue. Keep Lace fully synced.'
-                    : 'Ready for a little zero-knowledge magic.'}
+                    : 'DUST available for transaction fees.'}
             </p>
           </div>
         </div>
@@ -132,9 +132,7 @@ export function WalletConnect() {
           <div className="wallet-orbit" aria-hidden="true">
             <span className="wallet-orbit-ring" />
             <span className="wallet-orbit-ring inner" />
-            <div className="wallet-symbol">
-              <Icon name="wallet" />
-            </div>
+            <span className="wallet-symbol">lace</span>
             <i className="orbit-dot dot-one" />
             <i className="orbit-dot dot-two" />
           </div>
@@ -161,7 +159,7 @@ export function WalletConnect() {
             target="_blank"
             rel="noreferrer"
           >
-            Wallet setup guide <Icon name="external" />
+            Wallet setup guide
           </a>
         </p>
       )}
@@ -175,7 +173,6 @@ export function WalletConnect() {
           onClick={connected ? disconnect : () => void connect()}
           disabled={status === 'detecting' || status === 'connecting'}
         >
-          <Icon name={connected ? 'disconnect' : 'wallet'} />
           {status === 'detecting'
             ? 'Detecting Lace…'
             : status === 'connecting'
@@ -183,7 +180,6 @@ export function WalletConnect() {
               : connected
                 ? 'Disconnect wallet'
                 : 'Connect Lace wallet'}
-          {!connected && <Icon name="arrow" />}
         </button>
         <span className="button-hint">
           <span className="tiny-indicator" /> Midnight {networkId}{' '}

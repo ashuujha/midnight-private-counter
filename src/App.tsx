@@ -68,7 +68,7 @@ export default function App() {
             target="_blank"
             rel="noreferrer"
           >
-            Source <Icon name="external" />
+            Source
           </a>
         </nav>
         <a className="header-cta" href="#proof-lab">
@@ -76,7 +76,6 @@ export default function App() {
             className={`tiny-indicator ${status === 'connected' ? '' : 'muted-dot'}`}
           />
           {status === 'connected' ? 'Wallet connected' : 'Launch app'}
-          <Icon name="external" />
         </a>
       </header>
 
@@ -100,14 +99,13 @@ export default function App() {
             </p>
             <div className="hero-actions">
               <a className="button button-primary hero-cta" href="#proof-lab">
-                Enter the proof lab <Icon name="arrow" />
+                Enter the proof lab
               </a>
               <a className="hero-secondary" href="#privacy">
-                A closer look <span>↓</span>
+                A closer look
               </a>
             </div>
             <div className="hero-note">
-              <Icon name="lock" />
               <span>Private inputs. Public verification.</span>
             </div>
           </div>
@@ -140,19 +138,16 @@ export default function App() {
           aria-label="The experiment at a glance"
         >
           <div>
-            <Icon name="lock" />
             <span>Private by nature</span>
             <span className="principle-detail">Your witness stays hidden</span>
           </div>
           <div>
-            <Icon name="cube" />
             <span>Verified on-chain</span>
             <span className="principle-detail">
               Every increment leaves a proof
             </span>
           </div>
           <div>
-            <Icon name="spark" />
             <span>One simple interaction</span>
             <span className="principle-detail">Connect. Prove. Discover.</span>
           </div>
@@ -202,7 +197,7 @@ export default function App() {
               target="_blank"
               rel="noreferrer"
             >
-              Get set up <Icon name="external" />
+              Get set up
             </a>
           </div>
         </section>
@@ -231,14 +226,14 @@ export default function App() {
           target="_blank"
           rel="noreferrer"
         >
-          Documentation <Icon name="external" />
+          Documentation
         </a>
         <a
           href="https://github.com/ashuujha/midnight-private-counter"
           target="_blank"
           rel="noreferrer"
         >
-          GitHub <Icon name="external" />
+          GitHub
         </a>
       </footer>
     </div>

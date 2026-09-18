@@ -98,9 +98,7 @@ export function CircuitCall() {
         <span className="step-label">
           02 <span>/ YOUR MOMENT OF PROOF</span>
         </span>
-        <span className="privacy-chip">
-          <Icon name="lock" /> ZERO KNOWLEDGE
-        </span>
+        <span className="privacy-chip">ZERO KNOWLEDGE</span>
       </div>
       <h3 id="circuit-heading">A secret. A proof. A +1.</h3>
       <p className="panel-copy">
@@ -113,7 +111,7 @@ export function CircuitCall() {
       >
         <div className="journey-node">
           <div className="journey-symbol private-symbol">
-            <Icon name="lock" />
+            <span aria-hidden="true">•••</span>
           </div>
           <strong>Private input</strong>
           <span>Stays hidden</span>
@@ -139,7 +137,6 @@ export function CircuitCall() {
       </div>
 
       <div className="privacy-callout">
-        <Icon name="lock" />
         <div>
           <strong>Proved without revealing your input</strong>
           <span>
@@ -216,13 +213,11 @@ export function CircuitCall() {
           onClick={() => void callCircuit()}
           disabled={status !== 'connected' || busy || !addressReady}
         >
-          <Icon name={result ? 'refresh' : 'spark'} />
           {busy
             ? 'Proof in progress…'
             : result
               ? 'Prove another increment'
               : 'Generate proof & increment'}
-          <Icon name="arrow" />
         </button>
         <span className="button-hint">
           {status !== 'connected'
