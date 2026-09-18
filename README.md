@@ -1,101 +1,137 @@
 # Midnight Private Counter
-> A Midnight contract that advances a public counter after proving a private value is within an allowed range.
+> A privacy-preserving dApp that advances a public counter after proving a hidden value is valid.
+
+## Live Demo
+
+**[midnight-private-counter.vercel.app](https://midnight-private-counter.vercel.app)**
 
 ## Contract Address
 
 | Network | Address |
 |---|---|
-| Preview | `a63f722b44482e8d825e4fde801b6c39392019a7c3f2138d5d0e3fb2902665fd` |
-| Preprod | `[PASTE ADDRESS AFTER DEPLOY]` |
+| Preprod | `19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89` |
 
 ## What This Does
 
-Midnight Private Counter maintains a public on-chain count. To increment it, a user supplies a private number through a Compact witness. The circuit proves that the number is between 1 and 10, increments the public count by one, and records that the range proof succeeded.
+Midnight Private Counter connects to Lace and calls the deployed contract's `increment` circuit. For every call, the browser creates an allowed private witness in memory. The Compact circuit proves that the witness is between 1 and 10, increments the public counter by one, and deliberately discloses only whether the range proof succeeded.
 
-The private number does not determine the public increment amount and is never written to the ledger. Observers can verify that a valid private input authorized each state transition without learning the input itself.
+The interface shows wallet connection state, proof-generation progress, and the confirmed transaction ID and block height. It never asks for, renders, logs, or returns the private witness value.
 
 ## Privacy Model
 
-- What is **PUBLIC** (on-chain, visible to anyone): the `count` value and the `lastProofAccepted` Boolean.
-- What is **PRIVATE** (private witness, never on-chain): the `privateIncrement` value supplied locally to the proof-generating circuit.
-- What the user **PROVES without revealing**: that the private value is within the inclusive range 1 through 10.
+- What is **PUBLIC**: the contract address, submitted transaction, block height, public `count`, and `lastProofAccepted` Boolean.
+- What is **PRIVATE**: the randomly generated `privateIncrement` witness. It exists only in the browser's in-memory private-state provider while the call is prepared.
+- What the user **PROVES without revealing**: that the private value is within the inclusive range 1 through 10 and therefore authorizes one counter increment.
 
-The contract deliberately calls `disclose(accepted)` only for the Boolean range-check result. It does not disclose or return the private witness value.
+The frontend serves the compiled circuit material from `/keys` and `/zkir`. Midnight.js runs the proving flow from the browser using the proof server configured in Lace, then Lace balances and submits the finalized transaction.
+
+## Privacy Claim
+
+An on-chain observer sees that the `increment` circuit succeeded, the public counter advanced by one, and `lastProofAccepted` became true. The observer cannot see the private witness, determine which allowed value was used, or recover it from the transaction result. The frontend reads only `transaction.public` and never sends private call data to the UI, analytics, or logs.
 
 ## Tech Stack
 
-- Midnight network Preview
-- Compact language and Compact compiler `0.31.1`
-- Compact devtools `0.5.2`
-- Node.js v22
-- Docker and the Midnight proof server
-- TypeScript test suite using Node's test runner
+- Midnight network Preprod
+- Compact language and Compact compiler
+- Midnight.js SDK 4.1.1
+- Midnight DApp Connector API 4.0.1
+- React 19 and Vite 7
+- Lace wallet
+- TypeScript and Node.js v22
 
 ## Prerequisites
 
 - Node.js v22 and npm
-- Docker Desktop with the Docker daemon running
-- Compact devtools and compiler toolchain `0.31.1`
-- Midnight proof-server image available on port `6300`
-- A funded Midnight Preview wallet with tNIGHT and generated DUST for deployment
+- Lace wallet installed, configured for Midnight Preprod, and funded with Preprod tNIGHT and DUST
+- Docker Desktop for the local Midnight proof server
+- Compact compiler for contract development
 
-Verify the main tools:
+Start the proof server and configure Lace to use `http://127.0.0.1:6300`:
 
 ```bash
-node --version
-docker info
-compact --version
-compact compile --version
+docker pull midnightnetwork/proof-server
+docker run --rm -p 6300:6300 midnightnetwork/proof-server
 ```
 
-## Setup
+## Run Locally
 
 Clone the repository and install dependencies:
 
 ```bash
-git clone <repository-url>
-cd Moonnight
+git clone https://github.com/ashuujha/midnight-private-counter.git
+cd midnight-private-counter
 npm install
-npm --prefix mn-demo install
 ```
 
-Install or select the compatible Compact compiler and start the proof server:
+Create a local environment file containing the deployed contract:
 
 ```bash
-compact update 0.31.1
-docker pull midnightnetwork/proof-server
-docker run -d -p 6300:6300 midnightnetwork/proof-server
+cp .env.example .env.local
 ```
 
-Compile the private counter:
+Set these values in `.env.local`:
+
+```dotenv
+VITE_MIDNIGHT_NETWORK=preprod
+VITE_CONTRACT_ADDRESS=19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89
+```
+
+Compile the contract and start the frontend:
 
 ```bash
 npm run compile
+npm run dev
 ```
 
-Deploy to Preview:
-
-```bash
-NODE_OPTIONS="--max-old-space-size=12288" npm run deploy:preview
-```
-
-On the first Preview run, fund the printed wallet address through the Preview faucet when prompted. The deploy process resumes after the wallet receives tNIGHT and generates DUST.
+Open the printed local URL, connect Lace, and approve the Preprod connection request.
 
 ## Run Tests
 
-Run all three contract simulator tests:
+```bash
+npm test
+npm run build
+```
+
+The contract test suite covers circuit validation, state transitions, and witness privacy. The production build type-checks the browser integration and packages the proving assets.
+
+## Deploy Frontend
+
+The repository includes `vercel.json`. Deploy the production build with:
 
 ```bash
+npm install
+npm run build
+npx vercel@latest login
+npx vercel@latest link
+npx vercel@latest env add VITE_MIDNIGHT_NETWORK production
+npx vercel@latest env add VITE_CONTRACT_ADDRESS production
+npx vercel@latest --prod
+```
+
+Enter `preprod` for `VITE_MIDNIGHT_NETWORK` and the address from the Contract Address table for `VITE_CONTRACT_ADDRESS`.
+
+## Demo Video
+
+`[PLACEHOLDER — add the demo video link after recording]`
+
+Record a video under two minutes that shows:
+
+1. Open the live demo with Lace on Preprod and click **Connect Lace wallet**.
+2. Show the connected wallet address appear, then briefly disconnect and reconnect.
+3. Click **Generate proof & increment** and keep the local proof-generation loading state visible.
+4. Show the confirmed on-chain transaction ID and block height.
+5. Point to **Proved without revealing your input** and explain that no private value appeared anywhere in the interface.
+
+## Level 1 Contract Development
+
+Compile and test the Compact contract independently:
+
+```bash
+npm run compile
 npm test
 ```
 
-The suite verifies private range logic, public state transitions, and that the witness value is absent from public outputs and ledger state.
-
-## Initial Idea
-
-The initial idea was to build a small contract that demonstrates Midnight's privacy model without hiding the state transition itself. A normal public counter reveals every update, while this version requires the caller to prove knowledge of a private number in an allowed range before the count can advance.
-
-This keeps the example easy to understand while still exercising the core Level 1 concepts: public ledger state, a private witness, zero-knowledge circuit logic, and deliberate selective disclosure. The public sees that an accepted proof advanced the counter, but never sees the private value used to authorize it.
+The original Preview deployment is `a63f722b44482e8d825e4fde801b6c39392019a7c3f2138d5d0e3fb2902665fd`.
 
 ## Screenshots
 
