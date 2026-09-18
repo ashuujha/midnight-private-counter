@@ -1,0 +1,66 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "isAllowedIncrement",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "value",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 65535
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Boolean"
+      }
+    },
+    {
+      "name": "increment",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "privateIncrement",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Uint",
+        "maxval": 65535
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "count",
+      "index": 0,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "lastProofAccepted",
+      "index": 1,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Boolean"
+      }
+    }
+  ]
+}

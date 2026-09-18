@@ -1,0 +1,5 @@
+node_modules/
+.midnight-state.json
+.midnight-wallet-state/
+midnight-level-db/
+*.log

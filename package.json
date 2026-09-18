@@ -1,0 +1,22 @@
+{
+  "name": "midnight-private-counter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Midnight counter advanced by proving a private value is within an allowed range.",
+  "scripts": {
+    "compile": "compact compile contracts/counter.compact managed/counter",
+    "test": "tsx --test tests/counter.test.ts",
+    "deploy:preview": "npm --prefix mn-demo run deploy:counter -- --network preview"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.0.0 <23"
+  }
+}

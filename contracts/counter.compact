@@ -1,0 +1,32 @@
+pragma language_version >= 0.23;
+
+import CompactStandardLibrary;
+
+/**
+ * Privacy model
+ *
+ * PUBLIC: `count` and `lastProofAccepted` are stored on the Midnight ledger.
+ * PRIVATE: `privateIncrement()` supplies a Uint<16> witness that remains local
+ *          to the prover and is never written to the ledger or returned.
+ * PROOF:   each successful call proves the private value is between 1 and 10.
+ *          Only that Boolean result is deliberately disclosed.
+ */
+
+export ledger count: Counter;
+export ledger lastProofAccepted: Boolean;
+
+witness privateIncrement(): Uint<16>;
+
+export pure circuit isAllowedIncrement(value: Uint<16>): Boolean {
+    return value >= 1 && value <= 10;
+}
+
+export circuit increment(): [] {
+    const secretValue = privateIncrement();
+    const accepted = isAllowedIncrement(secretValue);
+
+    assert(accepted, "Private increment must be between 1 and 10");
+
+    count.increment(1);
+    lastProofAccepted = disclose(accepted);
+}
