@@ -1,11 +1,18 @@
+import { useState } from 'react';
 import { useMidnight } from '../hooks/useMidnight';
-
-const compactAddress = (address: string): string =>
-  address.length > 30 ? `${address.slice(0, 16)}…${address.slice(-10)}` : address;
 
 export function WalletConnect() {
   const { status, address, error, networkId, connect, disconnect } = useMidnight();
   const connected = status === 'connected' && address !== null;
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = async () => {
+    if (!address) return;
+
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <section className="panel wallet-panel" aria-labelledby="wallet-heading">
@@ -22,11 +29,14 @@ export function WalletConnect() {
 
       {connected ? (
         <div className="wallet-details">
-          <div>
+          <div className="wallet-address-row">
             <span className="detail-label">Wallet address</span>
-            <strong className="wallet-address" title={address}>
-              {compactAddress(address)}
-            </strong>
+            <div className="wallet-address-controls">
+              <strong className="wallet-address">{address}</strong>
+              <button className="copy-address-button" type="button" onClick={() => void copyAddress()}>
+                {copied ? 'Copied' : 'Copy full address'}
+              </button>
+            </div>
           </div>
           <div>
             <span className="detail-label">Network</span>
