@@ -59,13 +59,24 @@ const createProviders = async (
     throw new Error('Lace has no proof server configured. Add a Preprod proof server in Lace settings.');
   }
 
+  const proofServerUrl = new URL(configuration.proverServerUri);
+  const isLoopbackProofServer =
+    proofServerUrl.hostname === 'localhost' ||
+    proofServerUrl.hostname === '127.0.0.1' ||
+    proofServerUrl.hostname === '[::1]';
+  if (window.location.protocol === 'https:' && proofServerUrl.protocol === 'http:' && isLoopbackProofServer) {
+    throw new Error(
+      'Chrome blocks this hosted HTTPS page from reaching the local proof server. Configure an HTTPS proof-server URL in Lace or run the dApp locally.',
+    );
+  }
+
   const shieldedAddresses = await connectedAPI.getShieldedAddresses();
   const zkConfigProvider = new FetchZkConfigProvider<CounterCircuitKeys>(window.location.origin, fetch.bind(window));
 
   return {
     privateStateProvider: inMemoryPrivateStateProvider<CounterPrivateStateId, CounterPrivateState>(),
     zkConfigProvider,
-    proofProvider: httpClientProofProvider(configuration.proverServerUri, zkConfigProvider),
+    proofProvider: httpClientProofProvider(proofServerUrl.href, zkConfigProvider),
     publicDataProvider: indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
     walletProvider: {
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,

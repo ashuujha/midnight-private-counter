@@ -46,12 +46,14 @@ An on-chain observer sees that the `increment` circuit succeeded, the public cou
 - Docker Desktop for the local Midnight proof server
 - Compact compiler for contract development
 
-Start the proof server and configure Lace to use `http://127.0.0.1:6300`:
+Start the Ledger 8.1 proof server and configure Lace to use `http://127.0.0.1:6300` when running the dApp locally:
 
 ```bash
-docker pull midnightnetwork/proof-server
-docker run --rm -p 6300:6300 midnightnetwork/proof-server
+docker pull midnightntwrk/proof-server:8.1.0
+docker run --rm -p 6300:6300 midnightntwrk/proof-server:8.1.0
 ```
+
+Browsers block a hosted HTTPS frontend from calling a proof server on localhost. For the hosted demo, configure Lace with an HTTPS-hosted proof-server URL.
 
 ## Run Locally
 

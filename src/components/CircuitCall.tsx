@@ -13,8 +13,14 @@ const friendlyCircuitError = (error: unknown): string => {
   if (normalized.includes('user rejected') || normalized.includes('cancel')) {
     return 'The transaction was cancelled in Lace.';
   }
-  if (normalized.includes('proof server') || normalized.includes('failed to fetch')) {
+  if (normalized.includes('hosted https page') && normalized.includes('local proof server')) {
+    return 'Chrome blocks the hosted dApp from using a localhost proof server. Set an HTTPS proof-server URL in Lace, reconnect, and try again.';
+  }
+  if (normalized.includes('proof server')) {
     return 'The proof server is unavailable. Check the proof-server URL in Lace and try again.';
+  }
+  if (normalized.includes('failed to fetch')) {
+    return 'A network request failed. Check the Preprod indexer, proving assets, and proof-server URL, then try again.';
   }
   if (normalized.includes('insufficient') || normalized.includes('dust')) {
     return 'The wallet needs enough tNIGHT and DUST to submit this transaction.';
