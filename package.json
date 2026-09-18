@@ -16,6 +16,7 @@
     "deploy:preprod": "npm --prefix mn-demo run deploy:counter -- --network preprod"
   },
   "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.1",
     "@midnight-ntwrk/compact-runtime": "0.16.0",
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
     "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
@@ -25,6 +26,7 @@
     "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
     "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
     "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.0.0",
     "buffer": "6.0.3",
     "react": "19.2.4",
     "react-dom": "19.2.4"

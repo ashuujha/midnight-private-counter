@@ -4,9 +4,11 @@ import {
   createCircuitContext,
   createConstructorContext,
   sampleContractAddress,
+  StateValue as CompactStateValue,
   type CircuitContext,
   type WitnessContext,
 } from '@midnight-ntwrk/compact-runtime';
+import { StateValue as ProtocolStateValue } from '@midnight-ntwrk/midnight-js-protocol/onchain-runtime';
 import {
   Contract,
   ledger,
@@ -47,6 +49,10 @@ function createSimulator(secret: bigint): {
 }
 
 describe('private counter contract', () => {
+  it('uses the same StateValue runtime as Midnight.js', () => {
+    assert.equal(CompactStateValue, ProtocolStateValue);
+  });
+
   it('validates the private circuit input range', () => {
     assert.equal(pureCircuits.isAllowedIncrement(1n), true);
     assert.equal(pureCircuits.isAllowedIncrement(10n), true);
