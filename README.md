@@ -53,7 +53,7 @@ docker pull midnightntwrk/proof-server:8.1.0
 docker run --rm -p 6300:6300 midnightntwrk/proof-server:8.1.0
 ```
 
-Browsers block a hosted HTTPS frontend from calling a proof server on localhost. For the hosted demo, configure Lace with an HTTPS-hosted proof-server URL.
+The frontend delegates proving to Lace through `getProvingProvider()`. Lace can therefore use this local proof server without exposing it directly to the hosted page.
 
 ## Run Locally
 

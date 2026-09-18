@@ -1,7 +1,6 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
@@ -15,7 +14,11 @@ import {
   Transaction,
   type TransactionId,
 } from '@midnight-ntwrk/midnight-js-protocol/ledger';
-import type { MidnightProviders, UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import {
+  createProofProvider,
+  type MidnightProviders,
+  type UnboundTransaction,
+} from '@midnight-ntwrk/midnight-js-types';
 import * as Counter from '../../managed/counter/contract/index.js';
 import { inMemoryPrivateStateProvider } from '../in-memory-private-state-provider';
 
@@ -28,6 +31,15 @@ type CounterPrivateState = {
 };
 
 type CounterProviders = MidnightProviders<CounterCircuitKeys, CounterPrivateStateId, CounterPrivateState>;
+
+const runStage = async <T>(label: string, operation: () => Promise<T>): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`${label}: ${detail}`, { cause: error });
+  }
+};
 
 const witnesses = {
   privateIncrement(context: { privateState: CounterPrivateState }): [CounterPrivateState, bigint] {
@@ -51,32 +63,25 @@ const createProviders = async (
 ): Promise<CounterProviders> => {
   setNetworkId(networkId);
 
-  const configuration = await connectedAPI.getConfiguration();
+  const configuration = await runStage('Reading Lace network configuration failed', () =>
+    connectedAPI.getConfiguration(),
+  );
   if (configuration.networkId !== networkId) {
     throw new Error(`Network mismatch: Lace is on ${configuration.networkId}, but this dApp requires ${networkId}.`);
   }
-  if (!configuration.proverServerUri) {
-    throw new Error('Lace has no proof server configured. Add a Preprod proof server in Lace settings.');
-  }
 
-  const proofServerUrl = new URL(configuration.proverServerUri);
-  const isLoopbackProofServer =
-    proofServerUrl.hostname === 'localhost' ||
-    proofServerUrl.hostname === '127.0.0.1' ||
-    proofServerUrl.hostname === '[::1]';
-  if (window.location.protocol === 'https:' && proofServerUrl.protocol === 'http:' && isLoopbackProofServer) {
-    throw new Error(
-      'Chrome blocks this hosted HTTPS page from reaching the local proof server. Configure an HTTPS proof-server URL in Lace or run the dApp locally.',
-    );
-  }
-
-  const shieldedAddresses = await connectedAPI.getShieldedAddresses();
+  const shieldedAddresses = await runStage('Reading Lace shielded addresses failed', () =>
+    connectedAPI.getShieldedAddresses(),
+  );
   const zkConfigProvider = new FetchZkConfigProvider<CounterCircuitKeys>(window.location.origin, fetch.bind(window));
+  const provingProvider = await runStage('Initializing Lace proving failed', () =>
+    connectedAPI.getProvingProvider(zkConfigProvider.asKeyMaterialProvider()),
+  );
 
   return {
     privateStateProvider: inMemoryPrivateStateProvider<CounterPrivateStateId, CounterPrivateState>(),
     zkConfigProvider,
-    proofProvider: httpClientProofProvider(proofServerUrl.href, zkConfigProvider),
+    proofProvider: createProofProvider(provingProvider),
     publicDataProvider: indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
     walletProvider: {
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,
@@ -122,15 +127,19 @@ export const callIncrementCircuit = async (
   // The private value is created here, kept only in memory, and never returned
   // to React. Only the deliberately disclosed Boolean result reaches the ledger.
   const privateState: CounterPrivateState = { privateIncrement: randomAllowedIncrement() };
-  const deployed = await findDeployedContract(providers, {
-    contractAddress: address,
-    compiledContract: compiledCounterContract,
-    privateStateId: COUNTER_PRIVATE_STATE_ID,
-    initialPrivateState: privateState,
-  });
+  const deployed = await runStage('Loading the Preprod contract failed', () =>
+    findDeployedContract(providers, {
+      contractAddress: address,
+      compiledContract: compiledCounterContract,
+      privateStateId: COUNTER_PRIVATE_STATE_ID,
+      initialPrivateState: privateState,
+    }),
+  );
 
   onProofStart?.();
-  const transaction = await deployed.callTx.increment();
+  const transaction = await runStage('Proving or submitting the transaction failed', () =>
+    deployed.callTx.increment(),
+  );
 
   return {
     txId: transaction.public.txId,
