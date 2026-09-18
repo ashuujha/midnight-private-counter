@@ -1,6 +1,7 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
+import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
@@ -17,6 +18,7 @@ import {
 import {
   createProofProvider,
   type MidnightProviders,
+  type ProofProvider,
   type UnboundTransaction,
 } from '@midnight-ntwrk/midnight-js-types';
 import * as Counter from '../../managed/counter/contract/index.js';
@@ -74,14 +76,21 @@ const createProviders = async (
     connectedAPI.getShieldedAddresses(),
   );
   const zkConfigProvider = new FetchZkConfigProvider<CounterCircuitKeys>(window.location.origin, fetch.bind(window));
-  const provingProvider = await runStage('Initializing Lace proving failed', () =>
-    connectedAPI.getProvingProvider(zkConfigProvider.asKeyMaterialProvider()),
-  );
+  const proofServerUrl = import.meta.env.VITE_PROOF_SERVER_URL?.trim();
+  let proofProvider: ProofProvider;
+  if (proofServerUrl) {
+    proofProvider = httpClientProofProvider(proofServerUrl, zkConfigProvider);
+  } else {
+    const provingProvider = await runStage('Initializing Lace proving failed', () =>
+      connectedAPI.getProvingProvider(zkConfigProvider.asKeyMaterialProvider()),
+    );
+    proofProvider = createProofProvider(provingProvider);
+  }
 
   return {
     privateStateProvider: inMemoryPrivateStateProvider<CounterPrivateStateId, CounterPrivateState>(),
     zkConfigProvider,
-    proofProvider: createProofProvider(provingProvider),
+    proofProvider,
     publicDataProvider: indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
     walletProvider: {
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,

@@ -53,7 +53,7 @@ docker pull midnightntwrk/proof-server:8.1.0
 docker run --rm -p 6300:6300 midnightntwrk/proof-server:8.1.0
 ```
 
-The frontend delegates proving to Lace through `getProvingProvider()`. Lace can therefore use this local proof server without exposing it directly to the hosted page.
+Set `VITE_PROOF_SERVER_URL` to an HTTPS proof-server endpoint for a hosted frontend. Without that variable, the frontend delegates proving to Lace through `getProvingProvider()`, which is suitable for local development.
 
 ## Run Locally
 
