@@ -17,6 +17,12 @@ Midnight Private Counter connects to Lace and calls the deployed contract's `inc
 
 The interface shows wallet connection state, proof-generation progress, and the confirmed transaction ID and block height. It never asks for, renders, logs, or returns the private witness value.
 
+## Interface
+
+The frontend combines original Mandelbrot-inspired artwork with a charcoal, sage, and lavender palette. The proof lab keeps wallet connection, DUST readiness, circuit progress, and transaction results together. Ambient motion can be paused and respects the system's reduced-motion preference. An interactive public/private explanation supports both mouse and keyboard navigation.
+
+Artwork provenance, the generation prompt, font licenses, and interaction details are documented in [frontend design notes](docs/frontend-design.md). See the [desktop preview](docs/screenshots/frontend-desktop.png) and [mobile preview](docs/screenshots/frontend-mobile.png).
+
 ## Privacy Model
 
 - What is **PUBLIC**: the contract address, submitted transaction, block height, public `count`, and `lastProofAccepted` Boolean.
