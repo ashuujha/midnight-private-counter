@@ -96,22 +96,44 @@ const createProviders = async (
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,
       getEncryptionPublicKey: () => shieldedAddresses.shieldedEncryptionPublicKey,
       balanceTx: async (transaction: UnboundTransaction): Promise<FinalizedTransaction> => {
-        const balanced = await connectedAPI.balanceUnsealedTransaction(toHex(transaction.serialize()));
-        return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-          'signature',
-          'proof',
-          'binding',
-          fromHex(balanced.tx),
-        );
+        return runStage('Lace transaction balancing failed', async () => {
+          const balanced = await connectedAPI.balanceUnsealedTransaction(toHex(transaction.serialize()));
+          return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+            'signature',
+            'proof',
+            'binding',
+            fromHex(balanced.tx),
+          );
+        });
       },
     },
     midnightProvider: {
       submitTx: async (transaction: FinalizedTransaction): Promise<TransactionId> => {
-        await connectedAPI.submitTransaction(toHex(transaction.serialize()));
-        return transaction.identifiers()[0];
+        return runStage('Lace transaction submission failed', async () => {
+          await connectedAPI.submitTransaction(toHex(transaction.serialize()));
+          return transaction.identifiers()[0];
+        });
       },
     },
   };
+};
+
+const assertWalletReady = async (connectedAPI: ConnectedAPI, networkId: string): Promise<void> => {
+  const connection = await runStage('Reading Lace connection status failed', () =>
+    connectedAPI.getConnectionStatus(),
+  );
+  if (connection.status !== 'connected' || connection.networkId !== networkId) {
+    throw new Error(`Network mismatch. Reconnect Lace to ${networkId}.`);
+  }
+
+  const dust = await runStage('Reading Lace DUST balance failed', () =>
+    connectedAPI.getDustBalance(),
+  );
+  if (dust.balance <= 0n) {
+    throw new Error(
+      'Lace DUST balance is zero. Fund this Lace address with Preprod tNIGHT, generate tDUST in Lace, wait for wallet sync, and try again.',
+    );
+  }
 };
 
 export type CounterTransactionResult = {
@@ -128,6 +150,8 @@ export const callIncrementCircuit = async (
   if (!/^[0-9a-fA-F]{64}$/.test(contractAddress)) {
     throw new Error('The Preprod contract address is missing or invalid.');
   }
+
+  await assertWalletReady(connectedAPI, networkId);
 
   const providers = await createProviders(connectedAPI, networkId);
   const address = contractAddress as ContractAddress;
