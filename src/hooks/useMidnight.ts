@@ -15,15 +15,21 @@ export const CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS ?? '19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89';
 
 type WalletStatus = 'detecting' | 'not-installed' | 'ready' | 'connecting' | 'connected';
+type DustBalance = {
+  readonly balance: bigint;
+  readonly cap: bigint;
+};
 
 type MidnightContextValue = {
   readonly status: WalletStatus;
   readonly address: string | null;
   readonly connectedAPI: ConnectedAPI | null;
+  readonly dustBalance: DustBalance | null;
   readonly error: string | null;
   readonly networkId: string;
   readonly connect: () => Promise<void>;
   readonly disconnect: () => void;
+  readonly refreshDustBalance: () => Promise<void>;
 };
 
 const MidnightContext = createContext<MidnightContextValue | null>(null);
@@ -66,6 +72,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   const [connector, setConnector] = useState<InitialAPI | null>(null);
   const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const [dustBalance, setDustBalance] = useState<DustBalance | null>(null);
   const [status, setStatus] = useState<WalletStatus>('detecting');
   const [error, setError] = useState<string | null>(null);
 
@@ -116,9 +123,11 @@ export function MidnightProvider({ children }: PropsWithChildren) {
       setConnectedAPI(connection);
       setAddress(unshieldedAddress);
       setStatus('connected');
+      setDustBalance(await connection.getDustBalance());
     } catch (connectionError) {
       setConnectedAPI(null);
       setAddress(null);
+      setDustBalance(null);
       setError(friendlyWalletError(connectionError));
       setStatus('ready');
     }
@@ -127,21 +136,34 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   const disconnect = useCallback(() => {
     setConnectedAPI(null);
     setAddress(null);
+    setDustBalance(null);
     setError(null);
     setStatus(connector ? 'ready' : 'not-installed');
   }, [connector]);
+
+  const refreshDustBalance = useCallback(async () => {
+    if (!connectedAPI) return;
+
+    try {
+      setDustBalance(await connectedAPI.getDustBalance());
+    } catch (balanceError) {
+      setError(friendlyWalletError(balanceError));
+    }
+  }, [connectedAPI]);
 
   const value = useMemo<MidnightContextValue>(
     () => ({
       status,
       address,
       connectedAPI,
+      dustBalance,
       error,
       networkId: MIDNIGHT_NETWORK,
       connect,
       disconnect,
+      refreshDustBalance,
     }),
-    [status, address, connectedAPI, error, connect, disconnect],
+    [status, address, connectedAPI, dustBalance, error, connect, disconnect, refreshDustBalance],
   );
 
   return createElement(MidnightContext.Provider, { value }, children);

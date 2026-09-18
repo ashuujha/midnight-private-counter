@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { useMidnight } from '../hooks/useMidnight';
 
+const DUST_SCALE = 1_000_000_000_000_000n;
+
+const formatDust = (value: bigint): string => {
+  const whole = value / DUST_SCALE;
+  const fraction = (value % DUST_SCALE).toString().padStart(15, '0').replace(/0+$/, '');
+  return `${whole}${fraction ? `.${fraction}` : ''} tDUST`;
+};
+
 export function WalletConnect() {
-  const { status, address, error, networkId, connect, disconnect } = useMidnight();
+  const { status, address, dustBalance, error, networkId, connect, disconnect, refreshDustBalance } = useMidnight();
   const connected = status === 'connected' && address !== null;
   const [copied, setCopied] = useState(false);
 
@@ -41,6 +49,17 @@ export function WalletConnect() {
           <div>
             <span className="detail-label">Network</span>
             <strong className="network-value">{networkId}</strong>
+          </div>
+          <div>
+            <span className="detail-label">DUST available</span>
+            <div className="wallet-address-controls">
+              <strong className={`network-value ${dustBalance?.balance === 0n ? 'zero-balance' : ''}`}>
+                {dustBalance ? formatDust(dustBalance.balance) : 'Checking…'}
+              </strong>
+              <button className="copy-address-button" type="button" onClick={() => void refreshDustBalance()}>
+                Refresh DUST
+              </button>
+            </div>
           </div>
         </div>
       ) : (

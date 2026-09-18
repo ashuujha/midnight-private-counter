@@ -19,8 +19,11 @@ const friendlyCircuitError = (error: unknown): string => {
   if (normalized.includes('failed to fetch')) {
     return `${message}. Make sure Lace is fully synced, its proof server is reachable, and then reconnect.`;
   }
+  if (normalized.includes('no dust generation registration') || normalized.includes('zero dust balance')) {
+    return message;
+  }
   if (normalized.includes('insufficient') || normalized.includes('dust')) {
-    return 'The wallet needs enough tNIGHT and DUST to submit this transaction.';
+    return 'Lace could not pay the transaction fee with the available DUST. Confirm Generate tDUST in Lace, wait for a positive DUST balance and full wallet sync, then reconnect.';
   }
   if (normalized.includes('network mismatch') || normalized.includes('network id')) {
     return 'Network mismatch. Switch Lace to Preprod, reconnect, and try again.';

@@ -129,9 +129,14 @@ const assertWalletReady = async (connectedAPI: ConnectedAPI, networkId: string):
   const dust = await runStage('Reading Lace DUST balance failed', () =>
     connectedAPI.getDustBalance(),
   );
+  if (dust.cap <= 0n) {
+    throw new Error(
+      'Lace reports no DUST generation registration. Open Lace → Midnight → Generate tDUST, review and confirm the registration, wait for wallet sync, then reconnect.',
+    );
+  }
   if (dust.balance <= 0n) {
     throw new Error(
-      'Lace DUST balance is zero. Fund this Lace address with Preprod tNIGHT, generate tDUST in Lace, wait for wallet sync, and try again.',
+      'Lace reports a zero DUST balance. tNIGHT cannot pay transaction fees directly. Wait for the tDUST tank in Lace to become positive, then reconnect.',
     );
   }
 };
