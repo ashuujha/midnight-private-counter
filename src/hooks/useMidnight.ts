@@ -23,6 +23,7 @@ type DustBalance = {
 type MidnightContextValue = {
   readonly status: WalletStatus;
   readonly address: string | null;
+  readonly dustAddress: string | null;
   readonly connectedAPI: ConnectedAPI | null;
   readonly dustBalance: DustBalance | null;
   readonly error: string | null;
@@ -72,6 +73,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   const [connector, setConnector] = useState<InitialAPI | null>(null);
   const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const [dustAddress, setDustAddress] = useState<string | null>(null);
   const [dustBalance, setDustBalance] = useState<DustBalance | null>(null);
   const [status, setStatus] = useState<WalletStatus>('detecting');
   const [error, setError] = useState<string | null>(null);
@@ -118,15 +120,20 @@ export function MidnightProvider({ children }: PropsWithChildren) {
           `Network mismatch: Lace is on ${configuration.networkId}; ${MIDNIGHT_NETWORK} is required.`,
         );
       }
-      const { unshieldedAddress } = await connection.getUnshieldedAddress();
+      const [{ unshieldedAddress }, { dustAddress: connectedDustAddress }] = await Promise.all([
+        connection.getUnshieldedAddress(),
+        connection.getDustAddress(),
+      ]);
       setConnector(wallet);
       setConnectedAPI(connection);
       setAddress(unshieldedAddress);
+      setDustAddress(connectedDustAddress);
       setStatus('connected');
       setDustBalance(await connection.getDustBalance());
     } catch (connectionError) {
       setConnectedAPI(null);
       setAddress(null);
+      setDustAddress(null);
       setDustBalance(null);
       setError(friendlyWalletError(connectionError));
       setStatus('ready');
@@ -136,6 +143,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   const disconnect = useCallback(() => {
     setConnectedAPI(null);
     setAddress(null);
+    setDustAddress(null);
     setDustBalance(null);
     setError(null);
     setStatus(connector ? 'ready' : 'not-installed');
@@ -155,6 +163,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
     () => ({
       status,
       address,
+      dustAddress,
       connectedAPI,
       dustBalance,
       error,
@@ -163,7 +172,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
       disconnect,
       refreshDustBalance,
     }),
-    [status, address, connectedAPI, dustBalance, error, connect, disconnect, refreshDustBalance],
+    [status, address, dustAddress, connectedAPI, dustBalance, error, connect, disconnect, refreshDustBalance],
   );
 
   return createElement(MidnightContext.Provider, { value }, children);

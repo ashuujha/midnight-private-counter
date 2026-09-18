@@ -10,16 +10,16 @@ const formatDust = (value: bigint): string => {
 };
 
 export function WalletConnect() {
-  const { status, address, dustBalance, error, networkId, connect, disconnect, refreshDustBalance } = useMidnight();
+  const { status, address, dustAddress, dustBalance, error, networkId, connect, disconnect, refreshDustBalance } = useMidnight();
   const connected = status === 'connected' && address !== null;
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'night' | 'dust' | null>(null);
 
-  const copyAddress = async () => {
-    if (!address) return;
+  const copyAddress = async (value: string | null, kind: 'night' | 'dust') => {
+    if (!value) return;
 
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    await navigator.clipboard.writeText(value);
+    setCopied(kind);
+    window.setTimeout(() => setCopied(null), 2000);
   };
 
   return (
@@ -38,11 +38,20 @@ export function WalletConnect() {
       {connected ? (
         <div className="wallet-details">
           <div className="wallet-address-row">
-            <span className="detail-label">Wallet address</span>
+            <span className="detail-label">tNIGHT / faucet address</span>
             <div className="wallet-address-controls">
               <strong className="wallet-address">{address}</strong>
-              <button className="copy-address-button" type="button" onClick={() => void copyAddress()}>
-                {copied ? 'Copied' : 'Copy full address'}
+              <button className="copy-address-button" type="button" onClick={() => void copyAddress(address, 'night')}>
+                {copied === 'night' ? 'Copied' : 'Copy faucet address'}
+              </button>
+            </div>
+          </div>
+          <div className="wallet-address-row">
+            <span className="detail-label">DUST generation address</span>
+            <div className="wallet-address-controls">
+              <strong className="wallet-address">{dustAddress ?? 'Unavailable'}</strong>
+              <button className="copy-address-button" type="button" onClick={() => void copyAddress(dustAddress, 'dust')} disabled={!dustAddress}>
+                {copied === 'dust' ? 'Copied' : 'Copy DUST address'}
               </button>
             </div>
           </div>
