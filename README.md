@@ -1,4 +1,5 @@
 # Midnight Private Counter — Less Revealed. More Possible.
+![CI](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml/badge.svg?branch=main)
 
 A privacy-preserving dApp that advances a public counter by proving a hidden value is valid. Connect Lace, generate a zero-knowledge proof, and confirm a real transaction on Midnight Preprod without publishing the private witness to the ledger.
 

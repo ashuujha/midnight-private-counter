@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Compile, test, and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Compact CLI and compiler
+        env:
+          COMPACT_UNMANAGED_INSTALL: ${{ runner.temp }}/compact-bin
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/midnightntwrk/compact/releases/download/compact-v0.5.2/compact-installer.sh \
+            --output "$RUNNER_TEMP/compact-installer.sh"
+          sh "$RUNNER_TEMP/compact-installer.sh"
+          echo "$COMPACT_UNMANAGED_INSTALL" >> "$GITHUB_PATH"
+          "$COMPACT_UNMANAGED_INSTALL/compact" update 0.31.1
+          "$COMPACT_UNMANAGED_INSTALL/compact" compile --version
+
+      - name: Compile the Compact contract
+        run: compact compile contracts/counter.compact managed/counter
+
+      - name: Run test suite
+        run: npm test 2>&1 | tee test-results.log
+
+      - name: Build production dApp and check TypeScript
+        run: npm run build
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-output
+          path: test-results.log
+          if-no-files-found: ignore
