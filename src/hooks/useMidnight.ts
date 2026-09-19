@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { ConnectedAPI, InitialAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { friendlyWalletError } from '../utils/errors';
 
 export const MIDNIGHT_NETWORK = import.meta.env.VITE_MIDNIGHT_NETWORK ?? 'preprod';
 export const CONTRACT_ADDRESS =
@@ -43,7 +45,10 @@ const getWallets = (): InitialAPI[] => {
       typeof candidate === 'object' &&
       'apiVersion' in candidate &&
       typeof candidate.apiVersion === 'string' &&
-      candidate.apiVersion.startsWith('4.'),
+      candidate.apiVersion.startsWith('4.') &&
+      'name' in candidate && typeof candidate.name === 'string' &&
+      'rdns' in candidate && typeof candidate.rdns === 'string' &&
+      'connect' in candidate && typeof candidate.connect === 'function',
   );
 };
 
@@ -56,19 +61,6 @@ const findLace = (): InitialAPI | undefined => {
   );
 };
 
-const friendlyWalletError = (error: unknown): string => {
-  const message = error instanceof Error ? error.message : String(error);
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes('reject') || normalized.includes('denied') || normalized.includes('not authorized')) {
-    return 'Wallet connection was rejected. Approve the request in Lace and try again.';
-  }
-  if (normalized.includes('network mismatch') || normalized.includes('network id')) {
-    return `Network mismatch. Switch Lace to ${MIDNIGHT_NETWORK} and reconnect.`;
-  }
-  return message || 'Lace could not connect. Please try again.';
-};
-
 export function MidnightProvider({ children }: PropsWithChildren) {
   const [connector, setConnector] = useState<InitialAPI | null>(null);
   const [connectedAPI, setConnectedAPI] = useState<ConnectedAPI | null>(null);
@@ -77,6 +69,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   const [dustBalance, setDustBalance] = useState<DustBalance | null>(null);
   const [status, setStatus] = useState<WalletStatus>('detecting');
   const [error, setError] = useState<string | null>(null);
+  const connectionVersion = useRef(0);
 
   useEffect(() => {
     const detect = (): boolean => {
@@ -92,9 +85,10 @@ export function MidnightProvider({ children }: PropsWithChildren) {
     let attempts = 0;
     const timer = window.setInterval(() => {
       attempts += 1;
-      if (detect() || attempts >= 40) {
+      const found = detect();
+      if (found || attempts >= 40) {
         window.clearInterval(timer);
-        if (attempts >= 40) setStatus('not-installed');
+        if (!found) setStatus('not-installed');
       }
     }, 100);
 
@@ -102,6 +96,7 @@ export function MidnightProvider({ children }: PropsWithChildren) {
   }, []);
 
   const connect = useCallback(async () => {
+    const version = ++connectionVersion.current;
     const wallet = connector ?? findLace();
     if (!wallet) {
       setStatus('not-installed');
@@ -114,33 +109,39 @@ export function MidnightProvider({ children }: PropsWithChildren) {
 
     try {
       const connection = await wallet.connect(MIDNIGHT_NETWORK);
+      if (connectionVersion.current !== version) return;
       const configuration = await connection.getConfiguration();
+      if (connectionVersion.current !== version) return;
       if (configuration.networkId !== MIDNIGHT_NETWORK) {
         throw new Error(
           `Network mismatch: Lace is on ${configuration.networkId}; ${MIDNIGHT_NETWORK} is required.`,
         );
       }
-      const [{ unshieldedAddress }, { dustAddress: connectedDustAddress }] = await Promise.all([
+      const [{ unshieldedAddress }, { dustAddress: connectedDustAddress }, balance] = await Promise.all([
         connection.getUnshieldedAddress(),
         connection.getDustAddress(),
+        connection.getDustBalance(),
       ]);
+      if (connectionVersion.current !== version) return;
       setConnector(wallet);
       setConnectedAPI(connection);
       setAddress(unshieldedAddress);
       setDustAddress(connectedDustAddress);
       setStatus('connected');
-      setDustBalance(await connection.getDustBalance());
+      setDustBalance(balance);
     } catch (connectionError) {
+      if (connectionVersion.current !== version) return;
       setConnectedAPI(null);
       setAddress(null);
       setDustAddress(null);
       setDustBalance(null);
-      setError(friendlyWalletError(connectionError));
+      setError(friendlyWalletError(connectionError, MIDNIGHT_NETWORK));
       setStatus('ready');
     }
   }, [connector]);
 
   const disconnect = useCallback(() => {
+    connectionVersion.current += 1;
     setConnectedAPI(null);
     setAddress(null);
     setDustAddress(null);
@@ -151,11 +152,16 @@ export function MidnightProvider({ children }: PropsWithChildren) {
 
   const refreshDustBalance = useCallback(async () => {
     if (!connectedAPI) return;
+    const version = connectionVersion.current;
 
     try {
-      setDustBalance(await connectedAPI.getDustBalance());
+      const balance = await connectedAPI.getDustBalance();
+      if (connectionVersion.current !== version) return;
+      setDustBalance(balance);
+      setError(null);
     } catch (balanceError) {
-      setError(friendlyWalletError(balanceError));
+      if (connectionVersion.current !== version) return;
+      setError(`DUST balance could not be refreshed. ${friendlyWalletError(balanceError, MIDNIGHT_NETWORK)}`);
     }
   }, [connectedAPI]);
 

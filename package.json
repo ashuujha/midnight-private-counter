@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "compile": "compact compile contracts/counter.compact managed/counter",
-    "test": "tsx --test tests/counter.test.ts",
+    "test": "tsx --test tests/*.test.ts",
     "deploy:preview": "npm --prefix mn-demo run deploy:counter -- --network preview",
     "deploy:preprod": "npm --prefix mn-demo run deploy:counter -- --network preprod"
   },

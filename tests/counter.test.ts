@@ -76,6 +76,18 @@ describe('private counter contract', () => {
     });
   });
 
+  it('rejects invalid witnesses without changing the public ledger', () => {
+    for (const secret of [0n, 11n]) {
+      const simulator = createSimulator(secret);
+      const before = ledger(simulator.context.currentQueryContext.state);
+      assert.throws(
+        () => simulator.contract.impureCircuits.increment(simulator.context),
+        /Private increment must be between 1 and 10/,
+      );
+      assert.deepEqual(ledger(simulator.context.currentQueryContext.state), before);
+    }
+  });
+
   it('keeps the witness value out of public outputs and ledger state', () => {
     const secret = 9n;
     const simulator = createSimulator(secret);

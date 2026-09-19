@@ -23,6 +23,7 @@ import {
 } from '@midnight-ntwrk/midnight-js-types';
 import * as Counter from '../../managed/counter/contract/index.js';
 import { inMemoryPrivateStateProvider } from '../in-memory-private-state-provider';
+import { getErrorMessage } from '../utils/errors';
 
 export const COUNTER_PRIVATE_STATE_ID = 'counterPrivateState';
 export type CounterPrivateStateId = typeof COUNTER_PRIVATE_STATE_ID;
@@ -38,7 +39,7 @@ const runStage = async <T>(label: string, operation: () => Promise<T>): Promise<
   try {
     return await operation();
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = getErrorMessage(error) || 'The service returned an unknown error';
     throw new Error(`${label}: ${detail}`, { cause: error });
   }
 };

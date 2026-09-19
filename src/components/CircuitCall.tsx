@@ -3,42 +3,12 @@ import { CONTRACT_ADDRESS, useMidnight } from '../hooks/useMidnight';
 import type { CounterTransactionResult } from '../midnight/counter';
 import { BrandMark, Icon } from './Icon';
 import { CopyButton } from './CopyButton';
+import { friendlyCircuitError } from '../utils/errors';
 
 type CallPhase = 'idle' | 'joining' | 'proving' | 'submitted';
 
 const compactHash = (value: string): string =>
   `${value.slice(0, 12)}…${value.slice(-10)}`;
-
-const friendlyCircuitError = (error: unknown): string => {
-  const message = error instanceof Error ? error.message : String(error);
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes('user rejected') || normalized.includes('cancel')) {
-    return 'The transaction was cancelled in Lace.';
-  }
-  if (normalized.includes('proof server')) {
-    return 'The proof server is unavailable. Check the proof-server URL in Lace and try again.';
-  }
-  if (normalized.includes('failed to fetch')) {
-    return `${message}. Make sure Lace is fully synced, its proof server is reachable, and then reconnect.`;
-  }
-  if (
-    normalized.includes('no dust generation registration') ||
-    normalized.includes('zero dust balance')
-  ) {
-    return message;
-  }
-  if (normalized.includes('insufficient') || normalized.includes('dust')) {
-    return 'Lace could not pay the transaction fee with the available DUST. Confirm Generate tDUST in Lace, wait for a positive DUST balance and full wallet sync, then reconnect.';
-  }
-  if (
-    normalized.includes('network mismatch') ||
-    normalized.includes('network id')
-  ) {
-    return 'Network mismatch. Switch Lace to Preprod, reconnect, and try again.';
-  }
-  return message || 'The circuit call failed. Check Lace and try again.';
-};
 
 export function CircuitCall() {
   const { connectedAPI, status, networkId, refreshDustBalance } = useMidnight();
@@ -83,7 +53,7 @@ export function CircuitCall() {
       void refreshDustBalance();
     } catch (callError) {
       if (callVersion.current !== version) return;
-      setError(friendlyCircuitError(callError));
+      setError(friendlyCircuitError(callError, networkId));
       setPhase('idle');
     }
   };
