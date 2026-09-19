@@ -6,7 +6,7 @@ export default defineConfig({
   cacheDir: '.vite',
   build: {
     target: 'esnext',
-    minify: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
