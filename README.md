@@ -1,292 +1,192 @@
-# Midnight Private Counter — Less Revealed. More Possible.
+# Midnight Private Counter
 ![CI](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml/badge.svg?branch=main)
+> Prove a private value is valid, advance a public counter, and keep the witness off the public ledger.
 
-A privacy-preserving dApp that advances a public counter by proving a hidden value is valid. Connect Lace, generate a zero-knowledge proof, and confirm a real transaction on Midnight Preprod without publishing the private witness to the ledger.
+## Live Demo
 
-**Compact Smart Contract · Zero-Knowledge Proofs · Midnight.js · React 19 · Lace Wallet · Midnight Preprod**
+**[midnight-private-counter.vercel.app](https://midnight-private-counter.vercel.app)**
 
-[Live Application](https://midnight-private-counter.vercel.app) · [Demo Video](https://youtu.be/Ai-zfJ9eokw) · [Source Code](https://github.com/ashuujha/midnight-private-counter) · [Screenshots](#9-screenshots) · [Verified Contract](#10-contract-addresses-and-on-chain-verification)
+[Public GitHub repository](https://github.com/ashuujha/midnight-private-counter) · [Demo video](https://youtu.be/Ai-zfJ9eokw) · [GitHub Actions](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml)
 
-![Midnight Private Counter desktop interface with the “Less revealed. More possible.” hero and fractal artwork](docs/screenshots/desktop-hero.png)
+## Contract Address
 
-## Submission Checklist
-
-| Requirement | Submission evidence |
+| Network | Address |
 |---|---|
-| Public GitHub repository with README | [ashuujha/midnight-private-counter](https://github.com/ashuujha/midnight-private-counter) — public repository with this project guide |
-| Live hosted demo | [Vercel application](https://midnight-private-counter.vercel.app) |
-| Deployed, verifiable Preprod contract | `19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89` — [on-chain verification and reproducible query](#10-contract-addresses-and-on-chain-verification) |
-| Demo video: wallet connection and a successful circuit call | [Watch the submitted demo on YouTube](https://youtu.be/Ai-zfJ9eokw) |
-| README documenting the privacy claim | [Privacy claim and trust boundaries](#privacy-claim) |
-| Minimum 8 meaningful commits | [17+ commits in the project history](https://github.com/ashuujha/midnight-private-counter/commits/main/) covering the contract, tests, deployment, wallet integration, proving fixes, and interface |
+| **Preprod** | `19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89` |
 
-### Demo Video
+This is the contract configured in the live frontend and `.env.example`. A read-only Preprod indexer check confirmed its public state: `count = 5` and `lastProofAccepted = true` at block `2607602` on 19 September 2026. See the [verification record](docs/verification/preprod-counter.json) and [reproducible query](#on-chain-verification). This snapshot can change as further calls succeed.
 
-**[Watch “Midnight network project” on YouTube](https://youtu.be/Ai-zfJ9eokw)**
+## What This Does
 
-The demonstration to review is the complete interaction: connect Lace on Preprod, select **Generate proof & increment**, and confirm that the successful circuit call displays a transaction ID and block height. The private witness should never appear in the interface.
+Midnight Private Counter is an educational dApp for experiencing a real zero-knowledge transaction:
 
-## Table of Contents
+1. Connect Lace on Midnight Preprod.
+2. Check that the wallet has registered tNIGHT for DUST generation and has a positive tDUST balance.
+3. Select **Generate proof & increment**. The browser generates a private witness between `1` and `10` and invokes the deployed Compact circuit.
+4. Follow the preparation and proving indicators, then approve the wallet's transaction request.
+5. See the confirmed public transaction ID and block height.
 
-1. [Product Overview and Problem Statement](#1-product-overview-and-problem-statement)
-2. [Architecture](#2-architecture)
-3. [Smart Contract Design](#3-smart-contract-design)
-4. [Proof and Transaction Flow](#4-proof-and-transaction-flow)
-5. [Features and Tech Stack](#5-features-and-tech-stack)
-6. [Local Development and Testing](#6-local-development-and-testing)
-7. [Deployment and CI Status](#7-deployment-and-ci-status)
-8. [Privacy and Security Considerations](#8-privacy-and-security-considerations)
-9. [Screenshots](#9-screenshots)
-10. [Contract Addresses and On-Chain Verification](#10-contract-addresses-and-on-chain-verification)
-11. [Resources and Links](#11-resources-and-links)
-12. [Contributing](#12-contributing)
-13. [License](#13-license)
+Every successful circuit call increments the counter by **exactly one**. The private value determines whether the range condition is satisfied; it is not the amount added to the counter. Users do not type a secret into this demonstration.
 
-## 1. Product Overview and Problem Statement
+The interface includes wallet connection and disconnection, DUST refresh, address copying, actionable failure messages, proof progress, and public/private explanation tabs. Its layout adapts to mobile screens, and ambient animations can be paused or disabled through the system's reduced-motion setting.
 
-How can a public blockchain verify a condition without learning the private value that satisfies it? Midnight Private Counter makes that question tangible through one small interaction: prove that a hidden number is between **1 and 10**, then advance the public counter by **exactly one**.
+![Midnight desktop interface and fractal artwork](docs/screenshots/desktop-hero.png)
 
-| Challenge | How this dApp addresses it |
+## Privacy Model
+
+- **PUBLIC:** the contract address, `count`, `lastProofAccepted`, transaction metadata, transaction ID, and block height.
+- **PRIVATE:** the generated `privateIncrement` witness used in the proving flow. It is stored in browser memory by the dApp, never displayed by the UI, and never written into the contract's public ledger state.
+- **PROVED without revealing:** the witness is a `Uint<16>` in the inclusive range `1` through `10`, permitting one public counter increment.
+
+The configured proof provider is part of the trust boundary: proving inputs may be sent to that service. “Private” here means hidden from the public ledger, not necessarily hidden from the browser, wallet, or prover.
+
+## Privacy Claim
+
+An on-chain observer sees that the circuit succeeded, the public counter advanced by one, and `lastProofAccepted` is `true`, along with public transaction metadata. The circuit does not publish the private witness in its ledger state or return value; the disclosed range-check result does not identify which allowed value was used.
+
+The UI receives only `transaction.public.txId` and `transaction.public.blockHeight` from a successful call. The witness is not returned to React or included in the result panel.
+
+This is a demonstration of selective disclosure, not a claim of transaction anonymity or proof of identity. The witness has a small, intentionally simple value range. A remote proof provider receives proving inputs, and the demo's in-memory storage is not an encrypted-backup system.
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
-| Verifying a value can require exposing the value itself | A Compact circuit proves the range condition while keeping the witness out of public ledger state |
-| Zero-knowledge concepts are difficult to see in practice | A two-step proof lab connects a wallet action to a real on-chain result |
-| It is easy to confuse private inputs with public transaction data | An interactive explanation separates the hidden witness from the public counter transition and transaction metadata |
-| Wallet readiness and proving failures can be hard to diagnose | The interface shows network, DUST balance, preparation/proving status, and actionable errors |
-
-This is an educational test-network dApp. The browser generates an allowed value for each call; users do not enter a secret. The value determines whether the proof is valid, **not how much the counter increases**. Every successful call adds `1`, whether the private value is `1`, `7`, or `10`.
-
-## 2. Architecture
-
-```mermaid
-flowchart TD
-    User[User] --> UI[React + Vite frontend on Vercel]
-    UI <-->|Connect, read addresses and DUST| Lace[Lace wallet]
-    UI --> SDK[Midnight.js browser integration]
-    Memory[In-memory private witness] --> SDK
-    Assets[Static proving assets: /keys and /zkir] --> SDK
-    SDK <-->|Read contract state and confirmation| Indexer[Midnight indexer]
-    SDK -->|Prepare proof| Prover[Lace proving provider or configured HTTP proof server]
-    Prover -->|Proved transaction| SDK
-    SDK -->|Balance and submit| Lace
-    Lace --> Network[Midnight Preprod]
-    Network --> Contract[Private Counter Compact contract]
-    Contract --> Ledger[Public count and lastProofAccepted]
-    Network --> Indexer
-    SDK -->|Public transaction ID and block height| UI
-```
-
-### Component responsibilities
-
-| Component | Responsibility | Source |
-|---|---|---|
-| Frontend | Landing page, wallet panel, proof lab, and public/private explanation | [`src/App.tsx`](src/App.tsx) |
-| Wallet provider | Detects a compatible connector, connects Lace, validates the network, and reads addresses and DUST | [`src/hooks/useMidnight.ts`](src/hooks/useMidnight.ts) |
-| Circuit interface | Loads the proving module on demand and displays pending, error, and confirmed states | [`src/components/CircuitCall.tsx`](src/components/CircuitCall.tsx) |
-| Midnight integration | Creates providers, supplies the witness, calls `increment`, and returns public confirmation data | [`src/midnight/counter.ts`](src/midnight/counter.ts) |
-| Private-state provider | Keeps browser-side witness state in memory | [`src/in-memory-private-state-provider.ts`](src/in-memory-private-state-provider.ts) |
-| Compact contract | Enforces the range condition and updates public ledger state | [`contracts/counter.compact`](contracts/counter.compact) |
-
-The deployed frontend is static. It uses the network configuration supplied by Lace and does not require an application database, GitHub OAuth, or a custom backend API. Proof generation uses either Lace's proving provider or the endpoint configured in `VITE_PROOF_SERVER_URL`.
-
-## 3. Smart Contract Design
-
-### 3.1 Private Counter
-
-**Purpose:** prove that a private witness is in the inclusive range `[1, 10]`, increment a public counter, and disclose only the successful range-check result.
-
-**Preprod contract address:**
-
-```text
-19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89
-```
-
-### 3.2 Public ledger state
-
-| Field | Compact type | Meaning |
-|---|---|---|
-| `count` | `Counter` | Cumulative number of successful increments |
-| `lastProofAccepted` | `Boolean` | Set to `true` by a successful range proof |
-
-A rejected assertion does not increment the counter or set `lastProofAccepted` to `false`; it prevents that state transition from succeeding.
-
-### 3.3 Private witness and circuit interface
-
-| Interface | Kind | Behavior |
-|---|---|---|
-| `privateIncrement(): Uint<16>` | Private witness | Supplies the value from the caller's private state |
-| `isAllowedIncrement(value: Uint<16>): Boolean` | Exported pure circuit | Checks `value >= 1 && value <= 10` without changing ledger state |
-| `increment(): []` | Exported state-changing circuit | Reads the witness, asserts validity, increments `count`, and discloses acceptance |
-
-The core implementation is deliberately small:
-
-```compact
-export ledger count: Counter;
-export ledger lastProofAccepted: Boolean;
-
-witness privateIncrement(): Uint<16>;
-
-export pure circuit isAllowedIncrement(value: Uint<16>): Boolean {
-    return value >= 1 && value <= 10;
-}
-
-export circuit increment(): [] {
-    const secretValue = privateIncrement();
-    const accepted = isAllowedIncrement(secretValue);
-
-    assert(accepted, "Private increment must be between 1 and 10");
-
-    count.increment(1);
-    lastProofAccepted = disclose(accepted);
-}
-```
-
-### 3.4 Compiled artifacts
-
-The checked-in [`managed/counter/`](managed/counter/) directory contains the generated JavaScript bindings, TypeScript declarations, circuit IR, and proving/verifying keys. Its [compiler metadata](managed/counter/compiler/contract-info.json) records **Compact compiler 0.31.1**, **language 0.23.0**, and **runtime 0.16.0**.
-
-[`scripts/copy-zk-assets.mjs`](scripts/copy-zk-assets.mjs) copies the circuit assets into `public/keys` and `public/zkir` before development and production builds. The frontend fetches them from its own origin when needed.
-
-## 4. Proof and Transaction Flow
-
-1. **Connect Lace.** The frontend requests a connection to `preprod`, verifies the returned network, and reads the wallet's unshielded address, DUST address, and DUST balance.
-2. **Start the experiment.** Clicking **Generate proof & increment** imports the proving module and its WASM dependencies.
-3. **Check readiness.** The integration checks the active connection, target network, DUST registration, and positive DUST balance.
-4. **Prepare private state.** The browser uses `crypto.getRandomValues` to generate an allowed witness and stores it in the in-memory private-state provider.
-5. **Load the deployed contract.** Midnight.js joins the configured contract through the indexer and the compiled circuit assets.
-6. **Prove and submit.** `deployed.callTx.increment()` runs the proving flow. Lace balances and submits the transaction through the wallet adapters.
-7. **Display confirmation.** The frontend receives only the public transaction ID and block height. It refreshes the DUST balance after success.
-
-This flow uses **one application contract**, with the browser, prover, wallet, and indexer coordinating its invocation.
-
-## 5. Features and Tech Stack
-
-### Features
-
-- Lace connection and disconnection with network validation.
-- DUST readiness, manual balance refresh, and address-copy controls.
-- Visible preparation, proving, failure, and confirmation states.
-- A private witness that is never displayed by the UI or returned in its transaction result.
-- Responsive desktop and mobile layouts with original fractal artwork.
-- Public/private explanation tabs with keyboard navigation.
-- Ambient animation controls and system reduced-motion support.
-- Deferred proof SDK/WASM loading, minified production assets, and long-lived caching for hashed assets.
-
-### Tech stack
-
-| Layer | Technology used in this repository |
-|---|---|
-| Smart contract | Compact · compiler 0.31.1 · language 0.23.0 |
-| Contract runtime | `@midnight-ntwrk/compact-runtime` 0.16.0 |
-| Blockchain | Midnight Preprod; historical Preview deployment |
-| dApp SDK | Midnight.js 4.1.1 · Compact.js 2.5.1 |
-| Wallet connection | Lace · Midnight DApp Connector API 4.0.1 |
-| Frontend | React 19.2.4 · TypeScript 5.9.3 · Vite 7.3.1 |
-| Styling | Custom CSS · locally served fonts · WebP artwork |
-| Application state | React hooks and Context |
-| Proof server | `midnightntwrk/proof-server:8.1.0` for the documented local setup |
+| Smart contract | Compact compiler **0.31.1** · language **0.23.0** |
+| Contract runtime | `@midnight-ntwrk/compact-runtime` **0.16.0** |
+| Blockchain | Midnight **Preprod** |
+| dApp SDK | Midnight.js **4.1.1** · Compact.js **2.5.1** |
+| Wallet | Lace · Midnight DApp Connector API **4.0.1** |
+| Frontend | React **19.2.4** · TypeScript **5.9.3** · Vite **7.3.1** |
+| Styling | Custom CSS · local fonts · WebP artwork |
 | Tests | Node.js test runner through `tsx` |
-| Tooling | Node.js 22.x · npm |
-| Hosting | Vercel static deployment |
+| CI | GitHub Actions · Node.js **22** · Compact CLI **0.5.2** |
+| Hosting | Vercel |
 
-## 6. Local Development and Testing
+## Prerequisites
 
-### Prerequisites
+- **Node.js 22.x** and npm. The root package requires `>=22.0.0 <23`.
+- **Lace wallet** with Midnight enabled and Preprod selected for real transactions.
+- Preprod **tNIGHT registered for tDUST generation**, a positive DUST balance, and a synchronized wallet. See the [wallet-funding guide](https://docs.midnight.network/guides/acquire-tokens).
+- **Compact compiler 0.31.1** to recompile the contract. See the [official toolchain installation guide](https://docs.midnight.network/getting-started/installation).
+- **Docker** when using the documented local proof server, or access to a compatible hosted proof service.
 
-| Tool | Requirement |
-|---|---|
-| Node.js | **22.x**; the root package requires `>=22.0.0 <23` |
-| npm | Install dependencies from the committed lockfile |
-| Lace | Enable Midnight, select Preprod, and fund the wallet for transactions |
-| Docker | Required when running a local proof server |
-| Compact compiler | **0.31.1** to reproduce the checked-in contract artifacts; optional for frontend-only development |
+The checked-in compiled artifacts let you start the frontend without recompiling. Local unit tests do not need a funded wallet or a running blockchain.
 
-See the [official toolchain installation guide](https://docs.midnight.network/getting-started/installation) for Compact and Docker setup. The repository includes compiled contract artifacts, so a frontend-only checkout can start without recompiling them.
+## Setup & Run Locally
 
-### Clone and configure
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/ashuujha/midnight-private-counter.git
 cd midnight-private-counter
-npm ci
+npm install
 cp .env.example .env.local
 ```
 
-The default configuration targets the existing Preprod contract:
+### 2. Configure the network and contract
+
+The defaults in `.env.local` are:
 
 ```dotenv
 VITE_MIDNIGHT_NETWORK=preprod
 VITE_CONTRACT_ADDRESS=19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89
 ```
 
-| Variable | Purpose | Scope |
-|---|---|---|
-| `VITE_MIDNIGHT_NETWORK` | Network requested from Lace; defaults to `preprod` | Public, bundled into the browser build |
-| `VITE_CONTRACT_ADDRESS` | Deployed counter's 64-character hexadecimal address | Public, bundled into the browser build |
-| `VITE_PROOF_SERVER_URL` | Optional HTTP proof-provider endpoint; when omitted, proving is delegated to Lace | Public, bundled into the browser build |
+| Variable | Purpose |
+|---|---|
+| `VITE_MIDNIGHT_NETWORK` | Network requested from Lace; defaults to `preprod` |
+| `VITE_CONTRACT_ADDRESS` | Deployed counter's 64-character hexadecimal address |
+| `VITE_PROOF_SERVER_URL` | Optional HTTP proof-provider endpoint; otherwise proving is delegated to Lace |
 
-Restart the development server after changing `.env.local`. Rebuild a deployed frontend when changing these values. Never put wallet seeds, recovery phrases, or private API credentials in `VITE_*` variables.
+All `VITE_*` values are public browser-build configuration. Do not put credentials, wallet seeds, or recovery phrases in them. Restart the development server after changes; rebuild the hosted frontend when its configuration changes.
 
-### Configure proving and wallet funding
+### 3. Configure proving
 
-For local proving, start the version used by this project:
+For a local proof server:
 
 ```bash
 docker run --rm -p 127.0.0.1:6300:6300 \
   midnightntwrk/proof-server:8.1.0 midnight-proof-server -v
 ```
 
-Configure Lace's Midnight proof-server setting to use the local service. For a hosted frontend that uses a separately hosted proof server, set `VITE_PROOF_SERVER_URL` to its HTTPS URL; that service must allow requests from the frontend origin.
+Set Lace's Midnight proof-server option to the local service. Alternatively, set `VITE_PROOF_SERVER_URL` to a compatible hosted HTTPS proof endpoint that allows requests from the frontend origin. Vercel hosts the static frontend and proving assets; it does not run this Docker service.
 
-Fund the wallet with Preprod tNIGHT, use **Generate tDUST** in Lace to register it for DUST generation, and wait for a positive DUST balance and wallet synchronization. tNIGHT alone does not satisfy the app's DUST check. Follow the [official wallet-funding guide](https://docs.midnight.network/guides/acquire-tokens).
+### 4. Compile the contract
 
-### Start the frontend
+After installing the Compact CLI, select the matching compiler and compile:
+
+```bash
+compact update 0.31.1
+compact compile --version
+npm run compile
+```
+
+`npm run compile` executes `compact compile contracts/counter.compact managed/counter`. The generated bindings, keys, and circuit IR are written to `managed/counter/`.
+
+### 5. Run the application
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:5173`, connect Lace, and select **Generate proof & increment**. The pre-development script copies the checked-in proving assets automatically.
+Open **http://localhost:5173**, connect Lace, and generate a proof. The pre-development script copies the proving assets into `public/keys` and `public/zkir`.
 
-### Compile and validate
-
-For contract development:
+To check and preview a production build:
 
 ```bash
-compact compile --version
-npm run compile
-```
-
-Run the repository's checks:
-
-```bash
-npm run typecheck
-npm test
 npm run build
 npm run preview
 ```
 
-The production build copies proving assets, type-checks the application, and writes the frontend to `dist/`. The preview server defaults to `http://localhost:4173`.
-
-The four tests in [`tests/counter.test.ts`](tests/counter.test.ts) check shared SDK runtime identity, the allowed range boundaries, public counter transitions, and exclusion of the private witness from public outputs. These are local contract simulations; they do not submit test-network transactions.
+The build type-checks the app and writes `dist/`. The preview server defaults to **http://localhost:4173**.
 
 ### Troubleshooting
 
-| Symptom | Check |
+| Symptom | Recovery |
 |---|---|
-| Lace is not detected | Enable the extension and Midnight support, then reload |
-| Network mismatch | Switch Lace to Preprod and reconnect |
+| Lace not detected | Enable the extension and Midnight support, then reload |
+| Connection or transaction rejected | Review and approve the next request in Lace |
+| Network mismatch | Switch Lace to the configured network and reconnect |
 | No DUST registration or zero DUST | Complete **Generate tDUST**, wait for accrual and wallet sync, then refresh |
-| Proof-server failure | Check the configured endpoint, proof-server version, and browser reachability |
-| Missing `/keys` or `/zkir` assets | Run the root development/build scripts; they copy assets from `managed/counter` |
-| `StateValue` or runtime incompatibility | Use the committed dependency lockfile and matching Compact artifacts |
+| Proving tools cannot be downloaded | Check connectivity and reload the page before retrying |
+| Proof-service failure | Check the configured endpoint or Lace proving settings |
+| Request timeout | Check Lace for a pending or submitted transaction before retrying |
 
-## 7. Deployment and CI Status
+## Run Tests
 
-### 7.1 Vercel frontend
+```bash
+npm test
+```
 
-The live application is hosted at **[midnight-private-counter.vercel.app](https://midnight-private-counter.vercel.app)**.
+The suite currently has **12 passing tests**:
 
-[`vercel.json`](vercel.json) configures the Vite framework, `npm install`, `npm run build`, and the `dist` output directory. Files under `/assets/` have content-hashed names and receive `Cache-Control: public, max-age=31536000, immutable`. The HTML remains revalidated so new deployments can reference new asset versions.
+- Five contract tests cover shared runtime identity, range boundaries, successful counter updates, rejection of invalid witnesses without state changes, and private-witness exclusion from public outputs.
+- Seven recovery-message tests cover structured Lace errors, wrapped disconnects, failed module downloads, DUST guidance, network selection, timeouts, and malformed error payloads.
+
+These are local tests; they do not submit blockchain transactions. Browser review also checks responsive layouts at **320, 390, 768, and 1440 pixels**, loading indicators, rejection and retry states, wallet disconnection, privacy labels, and production console errors. Browser transaction-success states are tested with a simulated connector; a separate check initializes the actual proof SDK and both WASM runtimes.
+
+![Captured npm test terminal output showing 12 tests passed and zero failures](docs/screenshots/test-output.png)
+
+[Full captured test output](docs/verification/test-output.txt).
+
+## CI/CD
+
+The [`CI` workflow](.github/workflows/ci.yml) runs automatically on **pushes to `main`** and **pull requests**. It:
+
+1. Checks out the repository.
+2. Installs **Node.js 22**.
+3. Runs `npm install`.
+4. Installs Compact CLI **0.5.2** and compiler **0.31.1**.
+5. Runs `compact compile contracts/counter.compact managed/counter`.
+6. Runs `npm test` and preserves the test output as a workflow artifact.
+7. Runs `npm run build`, including TypeScript validation.
+
+The badge immediately below the title reports the latest `main` workflow result. Open [GitHub Actions](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml) to inspect individual steps and download the test output. CI does not need a wallet seed, proof-server secret, or funded account.
+
+### Frontend deployment
+
+Vercel deployment uses [`vercel.json`](vercel.json), with `npm run build` and the `dist` output directory. Production JavaScript is minified, the proof SDK/WASM loads on demand, and content-hashed `/assets/` files receive long-lived cache headers.
 
 To deploy your own instance:
 
@@ -295,133 +195,86 @@ npx vercel@latest login
 npx vercel@latest link
 npx vercel@latest env add VITE_MIDNIGHT_NETWORK production
 npx vercel@latest env add VITE_CONTRACT_ADDRESS production
-```
-
-Use `preprod` and the Preprod contract address listed below. If using a hosted proof endpoint, also add it:
-
-```bash
+# If using a hosted proof endpoint:
 npx vercel@latest env add VITE_PROOF_SERVER_URL production
-```
-
-Deploy the configured application:
-
-```bash
 npx vercel@latest --prod
 ```
 
-Vercel hosts the frontend and static proving assets. It does not run the Docker proof server as part of this build.
+Use `preprod` and the contract address above. The GitHub workflow validates the application; production publishing uses the Vercel project or this CLI command.
 
-### 7.2 Deploying a new counter contract
+## Product Proposal
 
-Redeployment is optional; running the frontend against the existing address does not require it. The deployment helper lives in `mn-demo/` and uses its own wallet and compiled-artifact directory.
+See **[PROPOSAL.md](PROPOSAL.md)**.
 
-From the repository root, prepare the helper:
+All requested placeholders remain for the project author to fill in. Choose the product from the program's idea list, explain why Midnight is required, complete the data model and Mainnet feasibility answers, and submit the proposal for approval. **The proposal is not yet completed or submitted for approval.**
 
-```bash
-npm --prefix mn-demo ci
-compact compile contracts/counter.compact mn-demo/contracts/managed/counter
+## Architecture and Contract
+
+```mermaid
+flowchart TD
+    User[User] --> UI[React + Vite frontend]
+    UI <-->|Connection, addresses, DUST| Lace[Lace wallet]
+    UI --> SDK[Midnight.js]
+    Witness[In-memory private witness] --> SDK
+    Assets[Compiled keys and circuit IR] --> SDK
+    SDK <-->|Contract state and confirmation| Indexer[Midnight indexer]
+    SDK <-->|Proving inputs and proof| Prover[Configured proof provider]
+    SDK -->|Balance and submit| Lace
+    Lace --> Chain[Midnight Preprod]
+    Chain --> Contract[Private Counter contract]
+    Contract --> State[Public count and lastProofAccepted]
+    Chain --> Indexer
+    SDK -->|Public transaction ID and block height| UI
 ```
 
-Configure and fund the helper's deployment wallet using the [deployment scaffold instructions](mn-demo/README.md). For a public test network, set `PRIVATE_STATE_PASSWORD` to a strong private-state password of at least 16 characters, and start the local proof server before deploying.
+| Interface | Kind | Behavior |
+|---|---|---|
+| `count: Counter` | Public ledger | Counts successful increments |
+| `lastProofAccepted: Boolean` | Public ledger | Set to `true` after a successful range proof |
+| `privateIncrement(): Uint<16>` | Private witness | Supplies the private value |
+| `isAllowedIncrement(value: Uint<16>): Boolean` | Pure circuit | Checks the inclusive range `[1, 10]` |
+| `increment(): []` | State-changing circuit | Asserts validity, increments by one, and discloses acceptance |
 
-```bash
-npm run deploy:preprod
-# Alternatively, for the separate Preview network:
-# npm run deploy:preview
-```
+The [Compact source](contracts/counter.compact) enforces the range condition independently of the frontend. A rejected assertion leaves the public ledger unchanged. There is one application contract; the app has no OAuth, application database, or custom backend API.
 
-The script deploys the counter and records the result in the helper's gitignored `.midnight-state.json`. Update `VITE_CONTRACT_ADDRESS` and rebuild the frontend to target your new contract. The helper wallet is separate from Lace unless you explicitly configure them to share an identity.
+## Screenshots
 
-### 7.3 CI status
+These images show the real disconnected UI from the live application, with reduced motion enabled for stable capture. No connected wallet or successful transaction was fabricated for the UI screenshots.
 
-The repository currently contains a `.github/workflows/.gitkeep` placeholder, **not an implemented GitHub Actions CI/CD workflow**. The validation commands above are available to run locally or add to your own pipeline. Vercel deployment is configured independently through `vercel.json`.
+### Proof lab
 
-## 8. Privacy and Security Considerations
+![Desktop proof lab with Lace connection and proof controls](docs/screenshots/proof-lab.png)
 
-### Privacy claim
+### Privacy explanation
 
-The `increment` circuit proves that a private `Uint<16>` witness lies between **1 and 10** without publishing that witness in its public outputs or ledger state. An on-chain observer can see the public counter advance by one, the `lastProofAccepted` flag, and public transaction metadata. The disclosed range-check result does not identify which allowed value was used.
+![Private-witness explanation tab](docs/screenshots/privacy-explainer.png)
 
-The UI receives only `transaction.public.txId` and `transaction.public.blockHeight` from a successful call. This claim concerns disclosure to the public ledger; it does not hide transaction metadata or remove the trust placed in the browser, wallet, and configured proof provider.
-
-### Data visibility and trust boundaries
-
-| Data | Visibility |
-|---|---|
-| `privateIncrement` | Private witness used during proving; not written into the public ledger or displayed by the UI |
-| `count` and `lastProofAccepted` | Public ledger state |
-| Contract address, transaction ID, and block height | Public verification metadata |
-| Connected addresses and DUST balance | Read from Lace and shown to the connected user |
-
-- **Enforced range condition:** the contract asserts the witness is between `1` and `10` before updating the counter. Frontend checks are not the source of that guarantee.
-- **Deliberate disclosure:** `disclose(accepted)` publishes the successful Boolean result, not the witness value. The increment circuit returns an empty tuple.
-- **Proof-provider trust:** privacy from the public ledger does not mean the witness is hidden from the configured prover. The HTTP provider sends proving inputs to the selected service; use a prover appropriate for the confidentiality of your inputs.
-- **Demo private storage:** browser private state uses in-memory maps. The provider's export helpers serialize data; they do not implement encrypted backups, and the UI does not expose them.
-- **Wallet isolation:** the frontend does not request a wallet seed or recovery phrase. Wallet changes and disconnection clear displayed results and prevent a late result from appearing under a different wallet.
-- **Scope of the proof:** this proves a range condition, not identity, ownership, eligibility, or anonymity. The small generated value is a demonstration witness, not a high-entropy credential.
-- **Deployment credentials:** the `mn-demo` helper can store wallet recovery material locally. Keep its state files and deployment credentials private and out of version control.
-
-## 9. Screenshots
-
-UI screenshots were captured from the live application on **19 September 2026**, at desktop and mobile viewport sizes. They show the real disconnected interface with reduced motion enabled for stable captures. The explanatory tabs contain static educational content; no wallet connection or successful transaction was simulated for these images.
-
-### Desktop overview
-
-The hero appears at the top of this README. [View the full desktop page](docs/screenshots/frontend-desktop.png).
-
-### Proof lab — wallet connection and circuit controls
-
-![Desktop proof lab showing the Lace wallet connection panel and private-input-to-public-counter flow](docs/screenshots/proof-lab.png)
-
-### Privacy explanation — what stays private
-
-![Privacy explanation with the private witness tab selected](docs/screenshots/privacy-explainer.png)
-
-### Mobile views
+### Mobile
 
 <table>
+  <tr><th>Landing page</th><th>Proof lab</th></tr>
   <tr>
-    <th>Landing page</th>
-    <th>Proof lab</th>
-  </tr>
-  <tr>
-    <td valign="top"><img src="docs/screenshots/mobile-hero.png" alt="Mobile Midnight landing page and fractal artwork" width="320" /></td>
-    <td valign="top"><img src="docs/screenshots/mobile-proof-lab.png" alt="Mobile proof lab with stacked wallet and circuit panels" width="320" /></td>
+    <td valign="top"><img src="docs/screenshots/mobile-hero.png" alt="Mobile landing page" width="320" /></td>
+    <td valign="top"><img src="docs/screenshots/mobile-proof-lab.png" alt="Mobile proof lab" width="320" /></td>
   </tr>
 </table>
 
-[View the full mobile page](docs/screenshots/frontend-mobile.png).
+[Full desktop screenshot](docs/screenshots/frontend-desktop.png) · [Full mobile screenshot](docs/screenshots/frontend-mobile.png)
 
-### Contract verification report
+## On-Chain Verification
 
-This report is generated from a read-only Preprod indexer response. It is separate from the dApp UI and backed by the [saved verification record](docs/verification/preprod-counter.json).
-
-![Read-only Preprod verification report showing the contract address, latest transaction hash, public counter value, acceptance flag, and block height](docs/screenshots/contract-verification.png)
-
-## 10. Contract Addresses and On-Chain Verification
-
-### Recorded deployments
-
-| Network | Contract address | Usage |
-|---|---|---|
-| **Preprod** | `19710614a44cd723c34f79a913e20f2b8776d0bf8825c5b653c6cc25942a7d89` | Default frontend configuration; verified below |
-| Preview | `a63f722b44482e8d825e4fde801b6c39392019a7c3f2138d5d0e3fb2902665fd` | Historical deployment; not the default live-app network |
-
-### Preprod verification snapshot
-
-A read-only request to the Preprod indexer returned the following on **19 September 2026 at 18:21 UTC**:
+The [saved verification record](docs/verification/preprod-counter.json) contains the raw public indexer response and the decoded ledger snapshot from **19 September 2026, 18:21 UTC**:
 
 | Field | Observed value |
 |---|---|
+| Network | Preprod |
 | Latest indexed action | `ContractCall` |
-| Public `count` | `5` |
-| Public `lastProofAccepted` | `true` |
+| `count` | `5` |
+| `lastProofAccepted` | `true` |
 | Block height | `2607602` |
-| Latest indexed transaction hash | `d284582e5d559bd2ffdd96fe52613e352ecf16118b083c7b890c7f5fac882676` |
+| Latest transaction hash | `d284582e5d559bd2ffdd96fe52613e352ecf16118b083c7b890c7f5fac882676` |
 
-The public ledger was decoded using the checked-in counter bindings and the matching Midnight runtime. This is a point-in-time observation of an existing transaction, not a new deployment or a transaction submitted during documentation work. Later calls can change these values.
-
-### Reproduce the read-only query
+This was a read-only check of an existing transaction, not a new deployment or a transaction submitted during documentation work. Reproduce the query with:
 
 ```bash
 curl --fail-with-body --silent --show-error \
@@ -437,39 +290,66 @@ curl --fail-with-body --silent --show-error \
 JSON
 ```
 
-The response includes serialized public contract state in `state`, plus the latest indexed transaction and block. The raw response and decoded snapshot are preserved in [`docs/verification/preprod-counter.json`](docs/verification/preprod-counter.json).
+The response includes serialized public contract state, the latest indexed transaction, and its block. The [verification report image](docs/screenshots/contract-verification.png) is generated from the saved response and is separate from the dApp UI.
 
-## 11. Resources and Links
+## Demo Video Checklist
 
-| Resource | Link |
+**Existing demo:** [Midnight network project — YouTube](https://youtu.be/Ai-zfJ9eokw).
+
+For the one-minute submission, show:
+
+| Time | What to show |
 |---|---|
-| Live application | [midnight-private-counter.vercel.app](https://midnight-private-counter.vercel.app) |
-| Demo video | [Midnight network project — YouTube](https://youtu.be/Ai-zfJ9eokw) |
-| Source repository | [ashuujha/midnight-private-counter](https://github.com/ashuujha/midnight-private-counter) |
-| Commit history | [Implementation and documentation commits](https://github.com/ashuujha/midnight-private-counter/commits/main/) |
-| Midnight documentation | [docs.midnight.network](https://docs.midnight.network/) |
-| Compact language | [Compact documentation](https://docs.midnight.network/compact) |
-| Toolchain installation | [Install Compact and the proof server](https://docs.midnight.network/getting-started/installation) |
-| Wallet setup | [Lace](https://www.lace.io/) |
-| Test-network funding | [tNIGHT and DUST guide](https://docs.midnight.network/guides/acquire-tokens) |
-| Preprod faucet | [Nethermind Preprod faucet](https://midnight-tmnight-preprod.nethermind.dev) |
-| Deployment tooling | [mn-demo setup and wallet configuration](mn-demo/README.md) |
+| 0–10 seconds | Open the live dApp, connect Lace on Preprod, and show the connected wallet |
+| 10–40 seconds | Click **Generate proof & increment**, show the loading indicator, approve Lace, and show the confirmed transaction ID and block height |
+| 40–50 seconds | Run `npm test` in the terminal and show **12 passed, 0 failed** |
+| 50–60 seconds | Open this public README, show the **green CI badge**, Preprod contract address, and privacy model |
 
-## 12. Contributing
+Prepare wallet funding and DUST beforehand. If proof generation takes longer, clearly label a time-lapse or edit of the wait; retain the real wallet approval and confirmed result. Keep the witness and wallet recovery material out of the recording. Check that the final uploaded video includes the current tests and green badge.
 
-1. Fork the repository and create a focused feature branch.
-2. Install dependencies with `npm ci` and configure `.env.local`.
-3. Make the change and run `npm run typecheck`, `npm test`, and `npm run build`.
-4. For Compact changes, run `npm run compile` first and include the corresponding generated artifacts. Recompile into `mn-demo/contracts/managed/counter` if testing the deployment helper.
-5. Check desktop/mobile layouts and reduced-motion behavior for interface changes.
-6. Open a pull request describing the change, validation, and any contract or configuration impact. Include screenshots for visible changes.
+## File Structure
 
-Keep private witnesses, wallet credentials, and local state files out of commits and screenshots. Preserve the distinction between public transaction results and private proving inputs.
+```text
+.github/workflows/ci.yml        # Push/PR compilation, tests, and production build
+contracts/counter.compact      # Private counter source
+managed/counter/               # Generated contract bindings and proving assets
+src/
+  components/                  # Wallet, proof, privacy, and visual components
+  hooks/useMidnight.ts          # Wallet connection and session state
+  midnight/counter.ts           # Midnight.js proving and transaction adapters
+  utils/errors.ts              # Wallet and proof recovery messages
+  in-memory-private-state-provider.ts
+  App.tsx
+  main.tsx
+  styles.css
+tests/
+  counter.test.ts               # Contract state and privacy tests
+  errors.test.ts                # Recovery-message regression tests
+docs/screenshots/              # UI and actual test-output screenshots
+docs/verification/             # Public indexer snapshot and test transcript
+scripts/copy-zk-assets.mjs
+mn-demo/                       # Separate deployment helper and wallet tooling
+PROPOSAL.md                    # Author's unfilled product proposal
+README.md
+package.json
+vercel.json
+vite.config.ts
+```
 
-## 13. License
+For redeployment tooling, see [`mn-demo/README.md`](mn-demo/README.md). The helper expects counter artifacts at `mn-demo/contracts/managed/counter`, which can be generated with `compact compile contracts/counter.compact mn-demo/contracts/managed/counter` before running `npm run deploy:preprod`. Configure and fund its wallet first; keep its credentials and state files private.
 
-The repository does not currently include a project-wide `LICENSE` file. The `mn-demo` scaffold declares MIT in its package metadata; that declaration alone does not establish a license for the entire dApp. Bundled fonts include their own license files in [`public/fonts/`](public/fonts/).
+## Submission Checklist
 
----
+| Requirement | Evidence or remaining action |
+|---|---|
+| Public GitHub repository and complete README | [Repository](https://github.com/ashuujha/midnight-private-counter) and this guide |
+| Live demo | [Vercel application](https://midnight-private-counter.vercel.app) |
+| Verifiable Preprod address | [Contract Address](#contract-address) and [indexer verification](#on-chain-verification) |
+| 3+ passing tests and test-output screenshot | [12 passing tests](docs/screenshots/test-output.png) |
+| Passing CI workflow and badge | [CI runs](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml) and the badge below the title |
+| Privacy model and observer disclosure | [Privacy Model](#privacy-model) and [Privacy Claim](#privacy-claim) |
+| Product proposal from the idea list | [Template created](PROPOSAL.md); author must complete it and submit it for approval |
+| One-minute demo with full functionality | [Video linked](https://youtu.be/Ai-zfJ9eokw); check the recording against the current checklist above |
+| Minimum 10 meaningful commits | [Commit history](https://github.com/ashuujha/midnight-private-counter/commits/main/) already exceeds 10 commits |
 
 © Ashutosh Jha

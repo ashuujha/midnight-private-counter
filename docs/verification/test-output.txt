@@ -1,0 +1,28 @@
+$ npm test
+> midnight-private-counter@1.0.0 test
+> tsx --test tests/*.test.ts
+
+▶ private counter contract
+  ✔ uses the same StateValue runtime as Midnight.js (0.392934ms)
+  ✔ validates the private circuit input range (0.117419ms)
+  ✔ increments public state after a valid private proof (22.526855ms)
+  ✔ rejects invalid witnesses without changing the public ledger (11.401809ms)
+  ✔ keeps the witness value out of public outputs and ledger state (6.138964ms)
+✔ private counter contract (41.27352ms)
+▶ wallet and proof recovery messages
+  ✔ understands structured Lace rejection errors across the extension boundary (0.714547ms)
+  ✔ recognizes a connector error after a proving stage wraps it (0.208017ms)
+  ✔ gives page reload guidance for a failed dynamic import (0.097401ms)
+  ✔ keeps specific DUST registration guidance even inside a proof-server error (0.242449ms)
+  ✔ uses the configured network in wallet and circuit recovery guidance (0.135839ms)
+  ✔ warns users to check transaction status before retrying a timeout (0.183907ms)
+  ✔ provides actionable fallbacks for missing or malformed error payloads (0.359299ms)
+✔ wallet and proof recovery messages (2.617583ms)
+ℹ tests 12
+ℹ suites 2
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161.855114
