@@ -9,4 +9,7 @@ public/zkir/
 .midnight-wallet-state/
 midnight-level-db/
 *.log
-.vercel
+
+# Local design notes and generated demo/video working files
+/docs/frontend-design.md
+/brag-output/

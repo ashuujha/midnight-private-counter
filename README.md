@@ -389,7 +389,7 @@ The hero appears at the top of this README. [View the full desktop page](docs/sc
   </tr>
 </table>
 
-[View the full mobile page](docs/screenshots/frontend-mobile.png). Artwork provenance, font licenses, and interaction details are documented in the [frontend design notes](docs/frontend-design.md).
+[View the full mobile page](docs/screenshots/frontend-mobile.png).
 
 ### Contract verification report
 
@@ -452,7 +452,6 @@ The response includes serialized public contract state in `state`, plus the late
 | Wallet setup | [Lace](https://www.lace.io/) |
 | Test-network funding | [tNIGHT and DUST guide](https://docs.midnight.network/guides/acquire-tokens) |
 | Preprod faucet | [Nethermind Preprod faucet](https://midnight-tmnight-preprod.nethermind.dev) |
-| Design documentation | [Artwork, typography, motion, and validation](docs/frontend-design.md) |
 | Deployment tooling | [mn-demo setup and wallet configuration](mn-demo/README.md) |
 
 ## 12. Contributing
