@@ -222,7 +222,7 @@ The [proof-server Dockerfile](deploy/proof-server/Dockerfile) pins version **8.1
 
 The hosted prover receives private proving inputs. Its operator is inside the privacy trust boundary described above. No wallet seed or signing key belongs on this service.
 
-The deployment files are prepared; a dedicated hosted prover has **not yet been provisioned**. During the 20 September 2026 connectivity check, the public `proof-server.preprod.midnight.network` endpoint accepted `/check` but returned **403** for a real `/prove` request. It was not used as a production replacement.
+The deployed Render prover is **[midnight-counter-prover.onrender.com](https://midnight-counter-prover.onrender.com/ready)**, running version **8.1.0**. A browser check from the Vercel frontend origin successfully completed real `/check` and `/prove` requests with no network failures, stopping before wallet signing or transaction submission. This replaces the expired temporary tunnel; full wallet approval and on-chain confirmation still require the user's Lace session.
 
 See Midnight's [proof-server setup](https://docs.midnight.network/guides/local-proving) for the service and privacy model, and the hosting provider's instructions for deploying containers with HTTPS.
 
