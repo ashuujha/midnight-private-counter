@@ -166,9 +166,9 @@ The suite currently has **12 passing tests**:
 
 These are local tests; they do not submit blockchain transactions. Browser review also checks responsive layouts at **320, 390, 768, and 1440 pixels**, loading indicators, rejection and retry states, wallet disconnection, privacy labels, and production console errors. Browser transaction-success states are tested with a simulated connector; a separate check initializes the actual proof SDK and both WASM runtimes.
 
-![Captured npm test terminal output showing 12 tests passed and zero failures](docs/screenshots/test-output.png)
+![Local npm test run in the project terminal showing 12 tests passed and zero failures](docs/screenshots/test-output.png)
 
-[Full captured test output](docs/verification/test-output.txt).
+Local terminal run: **12 tests passed across 2 suites, with 0 failures**. [Saved test transcript](docs/verification/test-output.txt).
 
 ## CI/CD
 
