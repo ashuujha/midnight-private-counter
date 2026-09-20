@@ -6,7 +6,7 @@
 
 **[midnight-private-counter.vercel.app](https://midnight-private-counter.vercel.app)**
 
-[Public GitHub repository](https://github.com/ashuujha/midnight-private-counter) · [Demo video](https://youtu.be/Ai-zfJ9eokw) · [GitHub Actions](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml)
+[Public GitHub repository](https://github.com/ashuujha/midnight-private-counter) · [Demo video](https://youtu.be/Xa65AHEurZg) · [GitHub Actions](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml)
 
 ## Contract Address
 
@@ -335,7 +335,7 @@ The response includes serialized public contract state, the latest indexed trans
 
 ## Demo Video Checklist
 
-**Existing demo:** [Midnight network project — YouTube](https://youtu.be/Ai-zfJ9eokw).
+**Updated demo:** [Midnight network project — YouTube](https://youtu.be/Xa65AHEurZg).
 
 For the one-minute submission, show:
 
@@ -392,7 +392,7 @@ For redeployment tooling, see [`mn-demo/README.md`](mn-demo/README.md). The help
 | Passing CI workflow and badge | [CI runs](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml) and the badge below the title |
 | Privacy model and observer disclosure | [Privacy Model](#privacy-model) and [Privacy Claim](#privacy-claim) |
 | Product proposal from the idea list | [Template created](PROPOSAL.md); author must complete it and submit it for approval |
-| One-minute demo with full functionality | [Video linked](https://youtu.be/Ai-zfJ9eokw); check the recording against the current checklist above |
+| One-minute demo with full functionality | [Video linked](https://youtu.be/Xa65AHEurZg); check the recording against the current checklist above |
 | Minimum 10 meaningful commits | [Commit history](https://github.com/ashuujha/midnight-private-counter/commits/main/) already exceeds 10 commits |
 
 © Ashutosh Jha
