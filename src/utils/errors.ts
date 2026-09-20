@@ -56,10 +56,19 @@ export const friendlyCircuitError = (error: unknown, networkId: string): string 
   if (/timeout|timed out/.test(normalized)) {
     return 'The request timed out. Check Lace for a submitted or pending transaction before trying again.';
   }
-  if (/proof server|proving failed/.test(normalized)) {
+  if (/proof service request failed/.test(normalized) && /failed to fetch|networkerror|network request|load failed/.test(normalized)) {
+    return 'The proof service could not be reached. Its address may be unavailable or the service may be offline. Try again once the proof service is available.';
+  }
+  if (/proof server|proving failed|proof service request failed/.test(normalized)) {
     return 'The proof service could not complete the request. Check the configured proof server or Lace proving settings, then try again.';
   }
   if (/failed to fetch|networkerror|network request|load failed/.test(normalized)) {
+    if (/loading the .* contract failed/.test(normalized)) {
+      return `The ${networkId} contract data could not be loaded from the indexer. Check your connection and try again when the indexer is available.`;
+    }
+    if (/transaction submission failed|proving or submitting/.test(normalized)) {
+      return 'A network request failed while processing the transaction. Check Lace for a submitted or pending transaction before trying again.';
+    }
     return 'A network request failed. Check your internet connection, wallet sync, and proof service, then try again.';
   }
   if (/webassembly|wasm/.test(normalized)) {

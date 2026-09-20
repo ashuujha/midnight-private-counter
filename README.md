@@ -159,16 +159,16 @@ The build type-checks the app and writes `dist/`. The preview server defaults to
 npm test
 ```
 
-The suite currently has **12 passing tests**:
+The suite currently has **15 passing tests**:
 
 - Five contract tests cover shared runtime identity, range boundaries, successful counter updates, rejection of invalid witnesses without state changes, and private-witness exclusion from public outputs.
-- Seven recovery-message tests cover structured Lace errors, wrapped disconnects, failed module downloads, DUST guidance, network selection, timeouts, and malformed error payloads.
+- Ten recovery-message tests cover structured Lace errors, wrapped disconnects, failed module downloads, DUST guidance, network selection, timeouts, malformed error payloads, prover and indexer outages, and safe handling of uncertain transaction submission.
 
 These are local tests; they do not submit blockchain transactions. Browser review also checks responsive layouts at **320, 390, 768, and 1440 pixels**, loading indicators, rejection and retry states, wallet disconnection, privacy labels, and production console errors. Browser transaction-success states are tested with a simulated connector; a separate check initializes the actual proof SDK and both WASM runtimes.
 
 ![Local npm test run in the project terminal showing 12 tests passed and zero failures](docs/screenshots/test-output.png)
 
-Local terminal run: **12 tests passed across 2 suites, with 0 failures**. [Saved test transcript](docs/verification/test-output.txt).
+This captured terminal run shows **12 tests passed across 2 suites, with 0 failures**. Three network-error regression tests have since been added; the current suite passes **15 tests**. [Saved transcript of the captured run](docs/verification/test-output.txt).
 
 ## CI/CD
 
@@ -201,6 +201,41 @@ npx vercel@latest --prod
 ```
 
 Use `preprod` and the contract address above. The GitHub workflow validates the application; production publishing uses the Vercel project or this CLI command.
+
+### Always-on hosted prover
+
+The proof server needs a persistent container host separate from this static Vercel deployment. A temporary `trycloudflare.com` tunnel stops working when its local process or computer stops; do not use one as the production proof endpoint.
+
+The [proof-server Dockerfile](deploy/proof-server/Dockerfile) pins version **8.1.0**, matching this application's ledger dependency. Deploy it to a Docker-capable web service or VPS you control:
+
+1. Set the Docker build context to `deploy/proof-server` and the Dockerfile to `Dockerfile`.
+2. Route the host's stable **HTTPS** URL to container port **6300**. If the host uses `PORT` to discover the service, set `PORT=6300` there as well. Use an instance that stays running between requests.
+3. Set the HTTP health-check path to `/ready`. Allow startup time to download the public proving parameters. Check `/health` and `/version` too; a healthy process alone does not prove that `/prove` is usable.
+4. Verify browser access from your Vercel origin to **both** `POST /check` and `POST /prove`, including their CORS preflight requests. Test a real circuit proof before switching production.
+5. Replace Vercel's production `VITE_PROOF_SERVER_URL` with the service's base HTTPS URL, without `/check` or `/prove`, then redeploy the frontend. Vite embeds this value at build time.
+
+The hosted prover receives private proving inputs. Its operator is inside the privacy trust boundary described above. No wallet seed or signing key belongs on this service.
+
+The deployment files are prepared; a dedicated hosted prover has **not yet been provisioned**. During the 20 September 2026 connectivity check, the public `proof-server.preprod.midnight.network` endpoint accepted `/check` but returned **403** for a real `/prove` request. It was not used as a production replacement.
+
+See Midnight's [proof-server setup](https://docs.midnight.network/guides/local-proving) for the service and privacy model, and the hosting provider's instructions for deploying containers with HTTPS.
+
+For the free VPS option, [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) currently includes an ARM A1 allowance equivalent to **2 OCPUs and 12 GB RAM**, subject to available capacity and idle-instance reclamation. The `8.1.0` proof-server image supports ARM64. Oracle requires account/card verification; only select resources marked Always Free eligible and stay within your account's remaining allowance.
+
+On an Ubuntu VM with Docker Engine and the Compose plugin installed, allow inbound TCP ports **80** and **443** through both Oracle's network rules and the VM firewall. Point a hostname you control at the server, then run:
+
+```bash
+git clone https://github.com/ashuujha/midnight-private-counter.git
+cd midnight-private-counter/deploy/proof-server
+cp .env.example .env
+# Edit .env and set PROVER_DOMAIN to the hostname pointing to this VM.
+nano .env
+docker compose config --quiet
+docker compose up -d --build
+docker compose logs --tail=50 proof-server
+```
+
+The Compose configuration exposes the prover only to Caddy, which serves HTTPS on the public hostname and keeps certificate data in a Docker volume. Both services restart after a host reboot when Docker is enabled at boot. Check `https://YOUR_PROVER_HOST/ready` and complete a real `/check` → `/prove` test before updating Vercel. A VM and working hostname must be provisioned before these instructions can produce a live endpoint.
 
 ## Product Proposal
 
@@ -312,6 +347,7 @@ Prepare wallet funding and DUST beforehand. If proof generation takes longer, cl
 ```text
 .github/workflows/ci.yml        # Push/PR compilation, tests, and production build
 contracts/counter.compact      # Private counter source
+deploy/proof-server/          # Prover Dockerfile, Compose, and HTTPS configuration
 managed/counter/               # Generated contract bindings and proving assets
 src/
   components/                  # Wallet, proof, privacy, and visual components
@@ -345,7 +381,7 @@ For redeployment tooling, see [`mn-demo/README.md`](mn-demo/README.md). The help
 | Public GitHub repository and complete README | [Repository](https://github.com/ashuujha/midnight-private-counter) and this guide |
 | Live demo | [Vercel application](https://midnight-private-counter.vercel.app) |
 | Verifiable Preprod address | [Contract Address](#contract-address) and [indexer verification](#on-chain-verification) |
-| 3+ passing tests and test-output screenshot | [12 passing tests](docs/screenshots/test-output.png) |
+| 3+ passing tests and test-output screenshot | 15 tests currently pass; [captured 12-test run](docs/screenshots/test-output.png) |
 | Passing CI workflow and badge | [CI runs](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml) and the badge below the title |
 | Privacy model and observer disclosure | [Privacy Model](#privacy-model) and [Privacy Claim](#privacy-claim) |
 | Product proposal from the idea list | [Template created](PROPOSAL.md); author must complete it and submit it for approval |

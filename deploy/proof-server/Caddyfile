@@ -1,0 +1,12 @@
+{$PROVER_DOMAIN} {
+	@api path /check /prove /health /ready /version
+	reverse_proxy @api proof-server:6300 {
+		transport http {
+			response_header_timeout 300s
+		}
+	}
+
+	@root path /
+	respond @root "Midnight Private Counter proof service" 200
+	respond "Not found" 404
+}

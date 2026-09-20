@@ -36,6 +36,23 @@ describe('wallet and proof recovery messages', () => {
     assert.match(friendlyCircuitError(new Error('Proof server timed out'), 'preprod'), /submitted or pending transaction/);
   });
 
+  it('identifies an unreachable prover without blaming wallet sync', () => {
+    const error = new Error('Proving or submitting the transaction failed: Proof service request failed: Failed to fetch');
+    const message = friendlyCircuitError(error, 'preprod');
+    assert.match(message, /proof service could not be reached/);
+    assert.doesNotMatch(message, /wallet sync/);
+  });
+
+  it('identifies an indexer network failure separately from proving', () => {
+    const error = new Error('Loading the Preprod contract failed: NetworkError: Failed to fetch');
+    assert.match(friendlyCircuitError(error, 'preprod'), /preprod contract data.*indexer/);
+  });
+
+  it('warns against blindly retrying a failed submission request', () => {
+    const error = new Error('Proving or submitting the transaction failed: Lace transaction submission failed: Failed to fetch');
+    assert.match(friendlyCircuitError(error, 'preprod'), /submitted or pending transaction before trying again/);
+  });
+
   it('provides actionable fallbacks for missing or malformed error payloads', () => {
     for (const error of [null, undefined, {}, 42]) {
       assert.match(friendlyWalletError(error, 'preprod'), /Unlock the extension/);

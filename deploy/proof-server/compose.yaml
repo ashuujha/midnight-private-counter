@@ -1,0 +1,25 @@
+services:
+  proof-server:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "6300"
+
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - proof-server
+    environment:
+      PROVER_DOMAIN: ${PROVER_DOMAIN:?Set the public proof-server hostname in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

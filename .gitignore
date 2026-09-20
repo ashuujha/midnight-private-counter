@@ -13,3 +13,4 @@ midnight-level-db/
 # Local design notes and generated demo/video working files
 /docs/frontend-design.md
 /brag-output/
+/deploy/proof-server/.env

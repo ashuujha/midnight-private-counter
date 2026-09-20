@@ -91,7 +91,11 @@ const createProviders = async (
   return {
     privateStateProvider: inMemoryPrivateStateProvider<CounterPrivateStateId, CounterPrivateState>(),
     zkConfigProvider,
-    proofProvider,
+    proofProvider: {
+      proveTx: (transaction, config) => runStage('Proof service request failed', () =>
+        proofProvider.proveTx(transaction, config),
+      ),
+    },
     publicDataProvider: indexerPublicDataProvider(configuration.indexerUri, configuration.indexerWsUri),
     walletProvider: {
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,
