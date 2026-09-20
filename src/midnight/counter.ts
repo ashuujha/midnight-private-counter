@@ -23,7 +23,7 @@ import {
 } from '@midnight-ntwrk/midnight-js-types';
 import * as Counter from '../../managed/counter/contract/index.js';
 import { inMemoryPrivateStateProvider } from '../in-memory-private-state-provider';
-import { getErrorMessage } from '../utils/errors';
+import { getErrorMessage, getProofServerOrigin } from '../utils/errors';
 
 export const COUNTER_PRIVATE_STATE_ID = 'counterPrivateState';
 export type CounterPrivateStateId = typeof COUNTER_PRIVATE_STATE_ID;
@@ -72,6 +72,7 @@ const createProviders = async (
   if (configuration.networkId !== networkId) {
     throw new Error(`Network mismatch: Lace is on ${configuration.networkId}, but this dApp requires ${networkId}.`);
   }
+  const walletProverOrigin = getProofServerOrigin(configuration.proverServerUri);
 
   const shieldedAddresses = await runStage('Reading Lace shielded addresses failed', () =>
     connectedAPI.getShieldedAddresses(),
@@ -101,8 +102,11 @@ const createProviders = async (
       getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,
       getEncryptionPublicKey: () => shieldedAddresses.shieldedEncryptionPublicKey,
       balanceTx: async (transaction: UnboundTransaction): Promise<FinalizedTransaction> => {
-        return runStage('Lace transaction balancing failed', async () => {
-          const balanced = await connectedAPI.balanceUnsealedTransaction(toHex(transaction.serialize()));
+        const balanced = await runStage(
+          `Lace transaction balancing failed${walletProverOrigin ? ` (wallet proof server: ${walletProverOrigin})` : ''}`,
+          () => connectedAPI.balanceUnsealedTransaction(toHex(transaction.serialize())),
+        );
+        return runStage('Reading Lace balanced transaction failed', async () => {
           return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
             'signature',
             'proof',

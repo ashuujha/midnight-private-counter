@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { friendlyCircuitError, friendlyWalletError, getErrorMessage } from '../src/utils/errors';
+import { friendlyCircuitError, friendlyWalletError, getErrorMessage, getProofServerOrigin } from '../src/utils/errors';
 
 describe('wallet and proof recovery messages', () => {
   it('understands structured Lace rejection errors across the extension boundary', () => {
@@ -13,6 +13,27 @@ describe('wallet and proof recovery messages', () => {
   it('recognizes a connector error after a proving stage wraps it', () => {
     const wrapped = new Error(`Lace transaction balancing failed: ${getErrorMessage({ code: 'Disconnected', reason: 'Session expired' })}`);
     assert.match(friendlyCircuitError(wrapped, 'preprod'), /Reconnect your wallet/);
+  });
+
+  it('identifies an opaque Lace balancing failure without blaming the completed circuit proof', () => {
+    const error = new Error("Proving or submitting the transaction failed: Unexpected error submitting scoped transaction '<unnamed>': Error: Lace transaction balancing failed (wallet proof server: http://localhost:6300): The service returned an unknown error");
+    const message = friendlyCircuitError(error, 'preprod');
+    assert.match(message, /circuit proof succeeded/);
+    assert.match(message, /has not submitted/);
+    assert.match(message, /Lace proof server: http:\/\/localhost:6300/);
+    assert.match(message, /hosted prover does not change Lace/);
+    assert.doesNotMatch(message, /scoped transaction|<unnamed>/);
+    const withoutUrl = friendlyCircuitError(new Error('Lace transaction balancing failed: The service returned an unknown error'), 'preprod');
+    assert.match(withoutUrl, /Lace's own proof-server setting/);
+    assert.doesNotMatch(withoutUrl, /undefined/);
+  });
+
+  it('does not expose credentials, paths, or tokens in wallet prover diagnostics', () => {
+    assert.equal(getProofServerOrigin('https://user:password@prover.example/private?token=secret#fragment'), 'https://prover.example');
+    assert.equal(getProofServerOrigin('http://localhost:6300/'), 'http://localhost:6300');
+    for (const value of [undefined, '', 'not a URL', 'file:///tmp/prover', 'javascript:alert(1)']) {
+      assert.equal(getProofServerOrigin(value), undefined);
+    }
   });
 
   it('gives page reload guidance for a failed dynamic import', () => {

@@ -10,6 +10,17 @@ export const getErrorMessage = (error: unknown): string => {
   return [...new Set(details)].join(': ');
 };
 
+// Show only the service origin: a custom URL may contain credentials or tokens.
+export const getProofServerOrigin = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return /^https?:$/.test(url.protocol) ? url.origin : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const friendlyWalletError = (error: unknown, networkId: string): string => {
   const message = getErrorMessage(error);
   const normalized = message.toLowerCase();
@@ -55,6 +66,11 @@ export const friendlyCircuitError = (error: unknown, networkId: string): string 
   }
   if (/timeout|timed out/.test(normalized)) {
     return 'The request timed out. Check Lace for a submitted or pending transaction before trying again.';
+  }
+  if (/lace transaction balancing failed/.test(normalized) && /service returned an unknown error/.test(normalized)) {
+    const walletProver = message.match(/wallet proof server: ([^)]+)\)/)?.[1];
+    const service = walletProver ? ` Lace proof server: ${walletProver}.` : '';
+    return `The circuit proof succeeded, but Lace could not balance the transaction. The dApp has not submitted it.${service} Check Lace's own proof-server setting, wallet sync, and available tDUST. The site's hosted prover does not change Lace's setting.`;
   }
   if (/proof service request failed/.test(normalized) && /failed to fetch|networkerror|network request|load failed/.test(normalized)) {
     return 'The proof service could not be reached. Its address may be unavailable or the service may be offline. Try again once the proof service is available.';
