@@ -202,14 +202,20 @@ npx vercel@latest --prod
 
 Use `preprod` and the contract address above. The GitHub workflow validates the application; production publishing uses the Vercel project or this CLI command.
 
-### Always-on hosted prover
+### Hosted prover
 
 The proof server needs a persistent container host separate from this static Vercel deployment. A temporary `trycloudflare.com` tunnel stops working when its local process or computer stops; do not use one as the production proof endpoint.
+
+**Free demo deployment on Render:** [deploy the prover](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fashuujha%2Fmidnight-private-counter) using the root [`render.yaml`](render.yaml). It creates one Docker web service with `plan: free`, port `6300`, and a `/ready` health check. No database, paid disk, or paid compute is included. Sign in with GitHub, review that the instance is **Free**, and deploy. Share the resulting `https://...onrender.com` URL with the frontend maintainer so they can verify a real proof and configure Vercel.
+
+Render advertises [free web services without a credit card](https://render.com/articles/platforms-with-a-real-free-tier-for-developers-in-2026), although [some accounts may be asked for card verification](https://community.render.com/t/the-deployement-of-a-web-service-fails/36005). If that happens, this option does not meet the no-card requirement; do not upgrade to a paid plan. Free services [sleep after 15 minutes without traffic](https://render.com/docs/free), so the endpoint works independently of the developer's computer but is **not always running**. Before a demo, open its `/ready` URL and wait for a healthy response.
+
+The prover was tested locally with the same **512 MB RAM / 0.1 CPU** limits as [Render's free plan](https://render.com/docs/compute-plans): a real counter `/check` and `/prove` completed, with the test stopping before wallet signing or submission. Peak container memory was approximately **62 MiB**. This validates this circuit at low concurrency; hosted startup, CORS, and wallet completion still need verification after deployment.
 
 The [proof-server Dockerfile](deploy/proof-server/Dockerfile) pins version **8.1.0**, matching this application's ledger dependency. Deploy it to a Docker-capable web service or VPS you control:
 
 1. Set the Docker build context to `deploy/proof-server` and the Dockerfile to `Dockerfile`.
-2. Route the host's stable **HTTPS** URL to container port **6300**. If the host uses `PORT` to discover the service, set `PORT=6300` there as well. Use an instance that stays running between requests.
+2. Route the host's stable **HTTPS** URL to container port **6300**. If the host uses `PORT` to discover the service, set `PORT=6300` there as well. For uninterrupted availability, choose an instance that stays running between requests; the free Render option above sleeps when idle.
 3. Set the HTTP health-check path to `/ready`. Allow startup time to download the public proving parameters. Check `/health` and `/version` too; a healthy process alone does not prove that `/prove` is usable.
 4. Verify browser access from your Vercel origin to **both** `POST /check` and `POST /prove`, including their CORS preflight requests. Test a real circuit proof before switching production.
 5. Replace Vercel's production `VITE_PROOF_SERVER_URL` with the service's base HTTPS URL, without `/check` or `/prove`, then redeploy the frontend. Vite embeds this value at build time.
@@ -220,9 +226,7 @@ The deployment files are prepared; a dedicated hosted prover has **not yet been 
 
 See Midnight's [proof-server setup](https://docs.midnight.network/guides/local-proving) for the service and privacy model, and the hosting provider's instructions for deploying containers with HTTPS.
 
-For the free VPS option, [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) currently includes an ARM A1 allowance equivalent to **2 OCPUs and 12 GB RAM**, subject to available capacity and idle-instance reclamation. The `8.1.0` proof-server image supports ARM64. Oracle requires account/card verification; only select resources marked Always Free eligible and stay within your account's remaining allowance.
-
-On an Ubuntu VM with Docker Engine and the Compose plugin installed, allow inbound TCP ports **80** and **443** through both Oracle's network rules and the VM firewall. Point a hostname you control at the server, then run:
+For an existing Ubuntu VPS with Docker Engine and the Compose plugin installed, allow inbound TCP ports **80** and **443** through the provider's network rules and the VM firewall. Point a hostname you control at the server, then run:
 
 ```bash
 git clone https://github.com/ashuujha/midnight-private-counter.git
@@ -369,6 +373,7 @@ PROPOSAL.md                    # Author's unfilled product proposal
 README.md
 package.json
 vercel.json
+render.yaml                    # Free Render proof-server deployment
 vite.config.ts
 ```
 

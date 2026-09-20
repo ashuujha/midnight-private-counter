@@ -2,8 +2,9 @@
 # Keep the image version aligned with the dApp's ledger-v8 dependency.
 FROM midnightntwrk/proof-server:8.1.0
 
-ENV MIDNIGHT_PROOF_SERVER_PORT=6300
+ENV MIDNIGHT_PROOF_SERVER_PORT=6300 \
+    RAYON_NUM_THREADS=1
 EXPOSE 6300
 
 # Exec form also works with the upstream distroless image (no shell required).
-CMD ["midnight-proof-server"]
+CMD ["midnight-proof-server", "--num-workers", "1"]

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: midnight-counter-prover
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/proof-server/Dockerfile
+    dockerContext: ./deploy/proof-server
+    healthCheckPath: /ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: PORT
+        value: "6300"
