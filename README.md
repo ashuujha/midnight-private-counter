@@ -245,9 +245,14 @@ The Compose configuration exposes the prover only to Caddy, which serves HTTPS o
 
 ## Product Proposal
 
-See **[PROPOSAL.md](PROPOSAL.md)**.
+The completed **[product proposal](PROPOSAL.md)** is ready for approval review. It contains substantive answers to all four required questions:
 
-All requested placeholders remain for the project author to fill in. Choose the product from the program's idea list, explain why Midnight is required, complete the data model and Mainnet feasibility answers, and submit the proposal for approval. **The proposal is not yet completed or submitted for approval.**
+- [Product and users](PROPOSAL.md#what-is-the-product-and-who-uses-it): an educational privacy dApp for developers, students, and workshop organizers, with a defined scope.
+- [Why Midnight](PROPOSAL.md#why-midnight-specifically): private range validation with public verification, including the hosted prover's privacy boundary.
+- [Data model](PROPOSAL.md#data-model): eight data points with their types and disclosure recipients.
+- [Mainnet feasibility](PROPOSAL.md#mainnet-feasibility): a limited Level 6 release target, prerequisites, and validation steps.
+
+Proposal completion is separate from the program's approval decision; approval has not been recorded here.
 
 ## Architecture and Contract
 
@@ -371,7 +376,7 @@ docs/screenshots/              # UI and actual test-output screenshots
 docs/verification/             # Public indexer snapshot and test transcript
 scripts/copy-zk-assets.mjs
 mn-demo/                       # Separate deployment helper and wallet tooling
-PROPOSAL.md                    # Author's unfilled product proposal
+PROPOSAL.md                    # Completed product proposal for approval review
 README.md
 package.json
 vercel.json
@@ -391,7 +396,7 @@ For redeployment tooling, see [`mn-demo/README.md`](mn-demo/README.md). The help
 | 3+ passing tests and test-output screenshot | Run the current 17-test suite; [captured 12-test run](docs/screenshots/test-output.png) |
 | Passing CI workflow and badge | [CI runs](https://github.com/ashuujha/midnight-private-counter/actions/workflows/ci.yml) and the badge below the title |
 | Privacy model and observer disclosure | [Privacy Model](#privacy-model) and [Privacy Claim](#privacy-claim) |
-| Product proposal from the idea list | [Template created](PROPOSAL.md); author must complete it and submit it for approval |
+| Product proposal from the idea list | [Completed proposal](PROPOSAL.md) with all four required answers; ready for approval review |
 | One-minute demo with full functionality | [Video linked](https://youtu.be/Xa65AHEurZg); check the recording against the current checklist above |
 | Minimum 10 meaningful commits | [Commit history](https://github.com/ashuujha/midnight-private-counter/commits/main/) already exceeds 10 commits |
 
